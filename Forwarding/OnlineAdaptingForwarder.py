@@ -24,8 +24,8 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
-    self.mot_dir= '/data/menna/DAVIS/Motion/'
-    self.short_dir= '/data/menna/DAVIS/Motion_3/'
+    self.mot_dir= '/home/eren/Data/DAVIS/Motion/'
+    self.short_dir= '/home/eren/Data/DAVIS/Motion_3/'
     self.correct_th= 0.3
     self.neg_th = 0.8
 
@@ -102,14 +102,15 @@ class OnlineAdaptingForwarder(OneshotForwarder):
               print >> log.v5, "frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/ \
                     (last_mask.shape[0]*last_mask.shape[1])
           else:
-              if t<n_frames-1:
+              if t<n_frames-1 and adapt_flag:
                   temp= cv2.imread(self.short_dir+dirs[video_idx]+('/%05d_mod.png'%t), 0)
                   temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
                   last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
                   last_mask[temp>self.neg_th]=1
                   last_mask= np.expand_dims(last_mask, axis=2)
-
                   negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
+                  adapt_flag= False
+
               n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
                   data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
               assert n == 1

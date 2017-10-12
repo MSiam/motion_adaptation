@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import sys
 
-imgs_path = "/data/menna/DAVIS/JPEGImages/480p/"
-annots_path = "/data/menna/DAVIS/Annotations/480p/"
-preds_path_prefix = "/data/menna/motion_adaptation/forwarded/"
+imgs_path = "/home/eren/Data/DAVIS/JPEGImages/480p/"
+annots_path = "/home/eren/Data/DAVIS/Annotations/480p/"
+preds_path_prefix = "/home/eren/Work/motion_adaptation/forwarded/"
 
 
 def convert_path(inp):
@@ -97,12 +97,9 @@ def main():
   save = True
   assert len(sys.argv) == 2
   model = sys.argv[1]
-  if 'dominant' in model:
-      seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
-              "dog", "drift-chicane", "goat", "horsejump-high", "kite-surf",
-              "paragliding-launch"]
-  else:
-      seqs= ["drift-straight", "libby", "motocross-jump", "parkour", "scooter-black", "soapbox"]
+  seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
+          "dog", "drift-chicane",  "drift-straight",  "goat", "horsejump-high", "kite-surf",
+          "libby", "motocross-jump", "paragliding-launch", "parkour", "scooter-black", "soapbox"]
 
   #ious = []
   #for seq in seqs:
