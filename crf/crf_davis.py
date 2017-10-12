@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import sys
 
-imgs_path = "/work/voigtlaender/data/DAVIS/JPEGImages/480p/"
-annots_path = "/work/voigtlaender/data/DAVIS/Annotations/480p/"
-preds_path_prefix = "/work/voigtlaender/data/training/2016-01-13-tf-test/forwarded/"
+imgs_path = "/home/eren/Data/DAVIS/JPEGImages/480p/"
+annots_path = "/home/eren/Data/DAVIS/Annotations/480p/"
+preds_path_prefix = "/home/eren/Work/temp/MTLMotion/forwarded/"
 
 
 def convert_path(inp):
@@ -93,9 +93,11 @@ def do_seq(seq, model, save=True):
 
 
 def main():
-  seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
-          "dog", "drift-chicane", "drift-straight", "goat", "horsejump-high", "kite-surf", "libby", "motocross-jump",
-          "paragliding-launch", "parkour", "scooter-black", "soapbox"]
+
+#  seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
+#          "dog", "drift-chicane", "goat", "horsejump-high", "kite-surf",
+#          "paragliding-launch"]
+  seqs= ["drift-straight", "libby", "motocross-jump", "parkour", "scooter-black", "soapbox"]
   save = True
   assert len(sys.argv) == 2
   model = sys.argv[1]
