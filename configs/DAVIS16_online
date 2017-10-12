@@ -1,6 +1,6 @@
 {
 #TODO: change this!
-"davis_data_dir": "/home/eren/Data/DAVIS/",
+"davis_data_dir": "/usr/data/Datasets/DAVIS/",
 
 "model": "DAVIS16_online",
 "task": "online",
@@ -22,12 +22,12 @@
 "save_oneshot": true,
 "save_logits": true,
 
-"augmentors_train": ["gamma", "flip"],
+"augmentors_train": [],
 "resize_mode_train": "",
 
 "resize_mode_val": "",
-"augmentors_val": ["gamma", "flip"],
-"n_test_samples": 10,
+"augmentors_val": [],
+"n_test_samples": 1,
 
 "n_adaptation_steps": 15,
 "adaptation_interval": 5,

@@ -675,7 +675,7 @@ def demo_images():
     print('Total Video Shape: ', imSeq.shape)
 
     # run the algorithm
-    maskSeq, confs, valid = nlc(imSeq, maxsp=args.maxsp, iters=args.iters, outdir=args.outdir)
+    maskSeq, confs, valid = nlc(imSeq, maxsp=args.maxsp, iters=args.iters, outdir=args.outdir, dosave=False)
     np.save(args.outdir + '/mask_%s.npy' % suffix, maskSeq)
 
     # save visual results
@@ -696,7 +696,6 @@ def demo_images():
             args.outdir + '/result_%s/' % suffix + imPathList[i].split('/')[-1])
 
     np.save(args.outdir+'/sal_th.npy', masks)
-    np.save(args.outdir+'/sal.npy', maskSeq)
     np.save(args.outdir+'/confs.npy', confs)
     np.save(args.outdir+'/valid.npy', valid)
     np.save(args.outdir+'/indices.npy', indices)

@@ -2,7 +2,6 @@ from Forwarding.OneshotForwarder import OneshotForwarder
 from datasets.Util.Timer import Timer
 from Measures import average_measures
 from Log import log
-import pdb
 import os
 import numpy
 from scipy.ndimage.morphology import distance_transform_edt, grey_erosion
@@ -25,6 +24,8 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
+    self.mot_dir= '/usr/data/Datasets/DAVIS/Motion/'
+    self.correct_th= 0.3
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -45,21 +46,22 @@ class OnlineAdaptingForwarder(OneshotForwarder):
       measures_video = []
       last_mask = targets_val[0]
 
-      mot_dir= '/home/eren/Data/DAVIS/Motion/'
-      dirs= sorted(os.listdir(mot_dir))
-      masks= np.load(mot_dir+dirs[video_idx]+'/sal.npy')
-#      confs= np.load(mot_dir+dirs[video_idx]+'/conf.npy')
-      indices= np.load(mot_dir+dirs[video_idx]+'/indices.npy')
+      dirs= sorted(os.listdir(self.mot_dir))
+      valid= np.load(self.mot_dir+dirs[video_idx]+'/valid.npy')
+      if not valid:
+          print('This sequence has no dominant motion direction thus long term cues are not valid')
+          return
+      masks= np.load(self.mot_dir+dirs[video_idx]+'/mask_'+dirs[video_idx]+'.npy')
+      indices= np.load(self.mot_dir+dirs[video_idx]+'/indices.npy')
 
       adapt_flag= True
       motion_video= False
       for t in xrange(0, n_frames):
           if t in indices:
-              last_mask= np.zeros((480, 854), dtype=np.uint8)
               t_curr= np.where(indices==t)[0][0]
-
               temp= masks[t_curr,:,:]
               temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
+              last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
               last_mask[temp>0.8]=1
               last_mask= np.expand_dims(last_mask, axis=2)
 
@@ -69,7 +71,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
                 assert n_ == 1
                 return logits_val_[0]
 
-              # online adaptation to current frame
+              # online adaptation to first frame
               if adapt_flag:
                   negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=0)
                   adapt_flag= False
@@ -79,8 +81,9 @@ class OnlineAdaptingForwarder(OneshotForwarder):
           assert n == 1
           assert len(measures) == 1
           measure = measures[0]
-          print >> log.v5, "frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
-          if float(ys_argmax_val.sum())/(854*480)>=0.3:
+          print >> log.v5, "frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/ \
+                (last_mask.shape[0]*last_mask.shape[1])
+          if float(ys_argmax_val.sum())/(last_mask.shape[0]*last_mask.shape[1])>=self.correct_th:
               motion_video = True
 
           if motion_video:
