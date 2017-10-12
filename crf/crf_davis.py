@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import sys
 
-imgs_path = "/home/eren/Data/DAVIS/JPEGImages/480p/"
-annots_path = "/home/eren/Data/DAVIS/Annotations/480p/"
-preds_path_prefix = "/home/eren/Work/temp/MTLMotion/forwarded/"
+imgs_path = "/data/menna/DAVIS/JPEGImages/480p/"
+annots_path = "/data/menna/DAVIS/Annotations/480p/"
+preds_path_prefix = "/data/menna/motion_adaptation/forwarded/"
 
 
 def convert_path(inp):
@@ -94,13 +94,15 @@ def do_seq(seq, model, save=True):
 
 def main():
 
-#  seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
-#          "dog", "drift-chicane", "goat", "horsejump-high", "kite-surf",
-#          "paragliding-launch"]
-  seqs= ["drift-straight", "libby", "motocross-jump", "parkour", "scooter-black", "soapbox"]
   save = True
   assert len(sys.argv) == 2
   model = sys.argv[1]
+  if 'dominant' in model:
+      seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
+              "dog", "drift-chicane", "goat", "horsejump-high", "kite-surf",
+              "paragliding-launch"]
+  else:
+      seqs= ["drift-straight", "libby", "motocross-jump", "parkour", "scooter-black", "soapbox"]
 
   #ious = []
   #for seq in seqs:
