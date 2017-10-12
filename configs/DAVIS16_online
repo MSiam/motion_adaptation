@@ -1,6 +1,6 @@
 {
 #TODO: change this!
-"davis_data_dir": "/usr/data/Datasets/DAVIS/",
+"davis_data_dir": "/data/menna/DAVIS/",
 
 "model": "DAVIS16_online",
 "task": "online",

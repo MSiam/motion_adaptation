@@ -24,7 +24,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
-    self.mot_dir= '/usr/data/Datasets/DAVIS/Motion/'
+    self.mot_dir= '/data/menna/DAVIS/Motion/'
     self.correct_th= 0.3
 
   def _oneshot_forward_video(self, video_idx, save_logits):
@@ -48,14 +48,15 @@ class OnlineAdaptingForwarder(OneshotForwarder):
 
       dirs= sorted(os.listdir(self.mot_dir))
       valid= np.load(self.mot_dir+dirs[video_idx]+'/valid.npy')
+      adapt_flag= True
+      motion_video= False
       if not valid:
           print('This sequence has no dominant motion direction thus long term cues are not valid')
-          return
+          adapt_flag= False
+
       masks= np.load(self.mot_dir+dirs[video_idx]+'/mask_'+dirs[video_idx]+'.npy')
       indices= np.load(self.mot_dir+dirs[video_idx]+'/indices.npy')
 
-      adapt_flag= True
-      motion_video= False
       for t in xrange(0, n_frames):
           if t in indices:
               t_curr= np.where(indices==t)[0][0]
@@ -86,7 +87,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
           if float(ys_argmax_val.sum())/(last_mask.shape[0]*last_mask.shape[1])>=self.correct_th:
               motion_video = True
 
-          if motion_video:
+          if motion_video and valid:
               if t in indices:
                   negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
                   n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
