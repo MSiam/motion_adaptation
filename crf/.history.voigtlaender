@@ -1,0 +1,14 @@
+2017-08-01.15-03-15 cd scripts/postproc/crf/
+2017-08-01.15-03-16 ll
+2017-08-01.15-03-17 rm .gitignore 
+2017-08-01.15-03-18 cd .
+2017-08-01.15-03-27 cd crf
+2017-08-01.15-03-27 ll
+2017-08-01.15-03-29 ll
+2017-08-01.15-03-33 vim combine_single_object_predictions_crf.py 
+2017-08-01.15-03-35 rm combine_single_object_predictions_crf.py 
+2017-08-01.15-03-39 vim crf_davis.py 
+2017-08-01.15-03-54 cd crf
+2017-08-01.15-03-54 ll
+2017-08-01.15-04-05 vim crf_davis.py 
+2017-08-01.15-04-17 vim crf_youtube.py 
