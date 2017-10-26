@@ -26,6 +26,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.use_negatives = self.config.bool("use_negatives", True)
     self.mot_dir= '/home/eren/Data/DAVIS/Motion/'
     self.short_dir= '/home/eren/Data/DAVIS/Motion_3/'
+    self.long_dir= '/home/eren/Data/DAVIS/ARP/'
     self.correct_th= 0.3
     self.neg_th = 0.8
 
@@ -44,27 +45,18 @@ class OnlineAdaptingForwarder(OneshotForwarder):
         data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=0)
       last_mask = targets_val[0]
 
-      if float(ys_argmax_val.sum())/(last_mask.shape[0]*last_mask.shape[1])>=self.correct_th:
-          motion_video = True
-          adapt_flag= False
-      else:
-          adapt_flag= True
-          motion_video= False
-
+      adapt_flag= True
       assert n == 1
       n_frames = data.num_examples_per_epoch()
 
       measures_video = []
 
       dirs= sorted(os.listdir(self.mot_dir))
-      valid= np.load(self.mot_dir+'/'+dirs[video_idx]+'/valid.npy')
-      if not valid:
-          print('This sequence has no dominant motion direction thus long term cues are not valid')
-          adapt_flag= True
-          motion_video= False
+      motype= np.load(self.mot_dir+'/'+dirs[video_idx]+'/motype.npy')
+      print('Motion Type of this Sequence is ', motype)
 
-      masks= np.load(self.mot_dir+dirs[video_idx]+'/mask_'+dirs[video_idx]+'.npy')
-      indices= np.load(self.mot_dir+dirs[video_idx]+'/indices.npy')
+#      masks= np.load(self.mot_dir+dirs[video_idx]+'/mask_'+dirs[video_idx]+'.npy')
+#      indices= np.load(self.mot_dir+dirs[video_idx]+'/indices.npy')
 
       for t in xrange(0, n_frames):
           def get_posteriors():
@@ -73,43 +65,32 @@ class OnlineAdaptingForwarder(OneshotForwarder):
               assert n_ == 1
               return logits_val_[0]
 
-          if motion_video:
-              if t in indices:
-                  t_curr= np.where(indices==t)[0][0]
-                  temp= masks[t_curr,:,:]
-                  temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
-                  last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
-                  last_mask[temp>self.neg_th]=1
-                  last_mask= np.expand_dims(last_mask, axis=2)
-
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
-                  n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
-                      data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
-                  assert n == 1
-                  assert len(measures) == 1
-                  measure = measures[0]
-                  print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
-          elif valid:
+          if motype=='static':
+              temp= cv2.imread(self.long_dir+dirs[video_idx]+('/%05d.png'%t), 0)
+              temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
+              last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
+              last_mask[temp>0.5]=1
+              last_mask= np.expand_dims(last_mask, axis=2)
+              self.distance_negative_threshold= 10
               if adapt_flag:
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=0)
-                  adapt_flag= False
-
+                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
+     #             adapt_flag= False
               n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
                   data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
               assert n == 1
               assert len(measures) == 1
               measure = measures[0]
-              print >> log.v5, "frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/ \
-                    (last_mask.shape[0]*last_mask.shape[1])
+              print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
           else:
-              if t<n_frames-1 and adapt_flag:
+              if t<n_frames-1:
                   temp= cv2.imread(self.short_dir+dirs[video_idx]+('/%05d_mod.png'%t), 0)
                   temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
                   last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
                   last_mask[temp>self.neg_th]=1
                   last_mask= np.expand_dims(last_mask, axis=2)
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
-                  adapt_flag= False
+                  if adapt_flag:
+                      negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
+                      adapt_flag= False
 
               n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
                   data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
