@@ -25,7 +25,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
     self.mot_dir= '/home/eren/Data/DAVIS/Motion/'
-    self.short_dir= '/home/eren/Data/DAVIS/Motion_3/'
+    self.short_dir= '/home/eren/Data/DAVIS/Motion_4/'
     self.long_dir= '/home/eren/Data/DAVIS/ARP/'
     self.correct_th= 0.3
     self.neg_th = 0.8
@@ -83,7 +83,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
               print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
           else:
               if t<n_frames-1:
-                  temp= cv2.imread(self.short_dir+dirs[video_idx]+('/%05d_mod.png'%t), 0)
+                  temp= cv2.imread(self.short_dir+dirs[video_idx]+('/%05d.png'%t), 0)
                   temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
                   last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
                   last_mask[temp>self.neg_th]=1

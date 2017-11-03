@@ -12,7 +12,7 @@ from Trainer import Trainer
 from Util import load_wider_or_deeper_mxnet_model
 from datasets.Forward import forward, oneshot_forward, online_forward
 from datasets.Loader import load_dataset
-
+from weights_utils import dump_weights
 
 class Engine(object):
   def __init__(self, config):
@@ -70,6 +70,7 @@ class Engine(object):
       self.try_load_weights()
     #put this in again later
     #self.session.graph.finalize()
+#    dump_weights(self.session)
 
   def _create_load_init_saver(self):
     if self.load_init != "" and not self.load_init.endswith(".pickle"):

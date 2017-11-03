@@ -3,7 +3,7 @@
 "davis_data_dir": "/home/eren/Data/DAVIS/",
 
 "model": "DAVIS16_oneshot",
-"task": "oneshot",
+"task": "eval",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
