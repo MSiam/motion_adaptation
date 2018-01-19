@@ -1,6 +1,6 @@
-for i in `seq 0 19`;
+for i in `seq 0 28`;
 do
-    python main.py configs/DAVIS16_online $i
+    python main.py configs/custom_oneshot $i
 done
 
 

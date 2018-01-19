@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix, average_precision_score
 
 import Constants
 from Log import log
-
+import pdb
 
 def create_confusion_matrix(pred, targets, n_classes):
   result = None
@@ -79,8 +79,8 @@ def compute_measures_for_binary_segmentation(prediction, target):
       precision = float(I) / P
 
     iou = float(I) / U
-
-  measures = {"recall": recall, "precision": precision, "iou": iou}
+  fmeasure= 2*recall*precision/ (recall+precision)
+  measures = {"recall": recall, "precision": precision, "iou": iou, "fmeasure":fmeasure}
   return measures
 
 
@@ -153,7 +153,6 @@ def calc_measures_avg(measures, n_imgs, ignore_classes):
     measures_result[Constants.CLICKS] = float(numpy.sum(clicks)) / n_imgs
 
   return measures_result
-
 
 def calc_iou(measures, n_imgs, ignore_classes):
   assert Constants.CONFUSION_MATRIX in measures

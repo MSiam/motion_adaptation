@@ -10,6 +10,7 @@ from datasets.DAVIS.DAVIS import NUM_CLASSES, VOID_LABEL, DAVIS_DEFAULT_PATH, DA
 from datasets.FeedDataset import OneshotImageDataset
 from datasets.Util.Util import unique_list, load_flow_from_flo
 from datasets.Util.Reader import create_tensor_dict
+DAVIS_IMAGE_SIZE = (None, None)
 
 
 def _load_flow(flow_dir, img_fn, future, flow_as_angle):
