@@ -1,6 +1,6 @@
-for i in `seq 0 28`;
+for i in `seq 0 29`;
 do
-    python main.py configs/custom_oneshot $i
+    python main.py configs/custom_online $i
 done
 
 

@@ -1,7 +1,7 @@
 {
 "davis_data_dir": "/home/eren/Data/FBMS/Testset/",
-"model": "DAVIS16_oneshot",
-"task": "oneshot",
+"model": "DAVIS16_online",
+"task": "online",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
@@ -26,6 +26,16 @@
 "resize_mode_val": "",
 "augmentors_val": [],
 "n_test_samples": 1,
+
+"n_adaptation_steps": 3,
+"adaptation_interval": 5,
+"adaptation_learning_rate": 0.00001,
+"posterior_positive_threshold": 0.8,
+"distance_negative_threshold": 220.0,
+"adaptation_loss_scale": 0.01,#or 0.03
+"adaptation_erosion_size": 15,
+
+"adapt_debug": true,
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},

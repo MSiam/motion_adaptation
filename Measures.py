@@ -79,7 +79,7 @@ def compute_measures_for_binary_segmentation(prediction, target):
       precision = float(I) / P
 
     iou = float(I) / U
-  fmeasure= 2*recall*precision/ (recall+precision)
+  fmeasure= (2*recall*precision)/ (recall+precision)
   measures = {"recall": recall, "precision": precision, "iou": iou, "fmeasure":fmeasure}
   return measures
 
