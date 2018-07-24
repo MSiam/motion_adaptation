@@ -1,9 +1,9 @@
 {
-"davis_data_dir": "custom_dataset/",
-"model": "custom_oneshot",
+"davis_data_dir": "/home/nray1/ms/FBMS/",
+"model": "DAVIS16_oneshot",
 "task": "oneshot",
-"dataset": "DAVIS17",
-"load": "models/pascal/pascal",
+"dataset": "DAVIS",
+"load": "models/DAVIS16/DAVIS16",
 "batch_size": 1,
 "batch_size_eval": 1,
 "log_verbosity": 5,
@@ -15,7 +15,7 @@
 
 "split": "dev",
 
-"n_finetune_steps": 50,
+"n_finetune_steps": 0,
 "learning_rates": "{1: 0.000003}",
 "save_oneshot": true,
 "save_logits": true,
@@ -23,9 +23,10 @@
 "augmentors_train": ["gamma", "flip"],
 "resize_mode_train": "random_resize",
 
-"resize_mode_val": "random_resize",
+"resize_mode_val": "",
 "augmentors_val": ["gamma", "flip"],
 "n_test_samples": 10,
+
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},

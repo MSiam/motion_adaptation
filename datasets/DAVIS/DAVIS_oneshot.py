@@ -162,14 +162,14 @@ class DavisOneshotDataset(OneshotImageDataset):
     if video_range is None:
       video_range = [0, len(imgs_seqs)]
 
-    from joblib import Parallel, delayed
-    videos[video_range[0]:video_range[1]] = Parallel(n_jobs=20, backend="threading")(delayed(_load_video)(
-      imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
-                                    (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]])
+#    from joblib import Parallel, delayed
+#    videos[video_range[0]:video_range[1]] = Parallel(n_jobs=20, backend="threading")(delayed(_load_video)(
+#      imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
+#                                    (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]])
 
-    #videos[video_range[0]:video_range[1]] = [_load_video(
-    # imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
-    #                               (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]]]
+    videos[video_range[0]:video_range[1]] = [_load_video(
+        imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
+                                   (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]]]
 
     DavisOneshotDataset._video_data = (video_tags, videos)
     end = time.time()

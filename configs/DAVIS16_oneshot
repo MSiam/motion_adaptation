@@ -1,6 +1,6 @@
 {
 #TODO: change this!
-"davis_data_dir": "/home/eren/Data/DAVIS/",
+"davis_data_dir": "/home/nray1/ms/DAVIS/",
 
 "model": "DAVIS16_oneshot",
 "task": "oneshot",

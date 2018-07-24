@@ -9,7 +9,7 @@ import scipy.misc
 import numpy as np
 import cv2
 VOID_LABEL = 255
-
+import pickle
 
 class OnlineAdaptingForwarder(OneshotForwarder):
   def __init__(self, engine):
@@ -24,9 +24,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
-    self.mot_dir= '/home/eren/Data/DAVIS/Motion/'
-    self.short_dir= '/home/eren/Data/DAVIS/Motion_3/'
-    self.correct_th= 0.3
+    self.mot_dir= '/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS16_oneshot/valid/'
     self.neg_th = 0.8
 
   def _oneshot_forward_video(self, video_idx, save_logits):
@@ -44,79 +42,39 @@ class OnlineAdaptingForwarder(OneshotForwarder):
         data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=0)
       last_mask = targets_val[0]
 
-      if float(ys_argmax_val.sum())/(last_mask.shape[0]*last_mask.shape[1])>=self.correct_th:
-          motion_video = True
-          adapt_flag= False
-      else:
-          adapt_flag= True
-          motion_video= False
-
       assert n == 1
       n_frames = data.num_examples_per_epoch()
 
       measures_video = []
-
+      files_motion= []
+#      files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
       dirs= sorted(os.listdir(self.mot_dir))
-      valid= np.load(self.mot_dir+'/'+dirs[video_idx]+'/valid.npy')
-      if not valid:
-          print('This sequence has no dominant motion direction thus long term cues are not valid')
-          adapt_flag= True
-          motion_video= False
-
-      masks= np.load(self.mot_dir+dirs[video_idx]+'/mask_'+dirs[video_idx]+'.npy')
-      indices= np.load(self.mot_dir+dirs[video_idx]+'/indices.npy')
-
       for t in xrange(0, n_frames):
           def get_posteriors():
               n_, _, _, logits_val_, _ = self._process_forward_minibatch(
                 data, network, save_logits=False, save_results=False, targets=targets, ys=ys, start_frame_idx=t)
               assert n_ == 1
               return logits_val_[0]
-
-          if motion_video:
-              if t in indices:
-                  t_curr= np.where(indices==t)[0][0]
-                  temp= masks[t_curr,:,:]
-                  temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
-                  last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
-                  last_mask[temp>self.neg_th]=1
-                  last_mask= np.expand_dims(last_mask, axis=2)
-
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
-                  n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
-                      data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
-                  assert n == 1
-                  assert len(measures) == 1
-                  measure = measures[0]
-                  print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
-          elif valid:
-              if adapt_flag:
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=0)
-                  adapt_flag= False
-
-              n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
-                  data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
-              assert n == 1
-              assert len(measures) == 1
-              measure = measures[0]
-              print >> log.v5, "frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/ \
-                    (last_mask.shape[0]*last_mask.shape[1])
+          if t == 0:
+              adapt_flag = 1
           else:
-              if t<n_frames-1 and adapt_flag:
-                  temp= cv2.imread(self.short_dir+dirs[video_idx]+('/%05d_mod.png'%t), 0)
-                  temp= (temp- temp.min())*1.0/ (temp.max()-temp.min())
-                  last_mask= np.zeros((temp.shape[0], temp.shape[1]), dtype=np.uint8)
-                  last_mask[temp>self.neg_th]=1
-                  last_mask= np.expand_dims(last_mask, axis=2)
-                  negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
-                  adapt_flag= False
+              adapt_flag = 0
 
-              n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
-                  data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
-              assert n == 1
-              assert len(measures) == 1
-              measure = measures[0]
-              print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
+          f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%t, 'rb')
+#          f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
+          mask = pickle.load(f)[:,:,1]
+          mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
+          last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
+          last_mask[mask>self.neg_th]=1
+          last_mask= np.expand_dims(last_mask, axis=2)
+
+          negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag)
+          n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
+              data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
+          assert n == 1
+          assert len(measures) == 1
+          measure = measures[0]
+          print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
 
           measures_video.append(measure)
           #last_mask = ys_argmax_val[0]
@@ -132,6 +90,9 @@ class OnlineAdaptingForwarder(OneshotForwarder):
       print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video
 
   def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn, adapt_flag=0):
+    """
+    adapt_flag (int): 0:do not adapt, 1:adapt with hard labels based on teacher, 2:adapt on hard labels from last mask
+    """
     eroded_mask = grey_erosion(last_mask, size=(self.erosion_size, self.erosion_size, 1))
     dt = distance_transform_edt(numpy.logical_not(eroded_mask))
 
@@ -139,7 +100,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     adaptation_target[:] = VOID_LABEL
 
     current_posteriors = get_posteriors_fn()
-    if adapt_flag==0:
+    if adapt_flag==2:
         positives = current_posteriors[:, :, 1] > self.posterior_positive_threshold
     else:
         positives = last_mask==1
@@ -153,6 +114,8 @@ class OnlineAdaptingForwarder(OneshotForwarder):
       adaptation_target[negatives] = 0
 
     do_adaptation = eroded_mask.sum() > 0
+    if adapt_flag == 0:
+        do_adaptation = False
 
     if self.debug:
       adaptation_target_visualization = adaptation_target.copy()
@@ -175,7 +138,7 @@ class OnlineAdaptingForwarder(OneshotForwarder):
         loss_scale = self.adaptation_loss_scale
         adaption_frame_idx = frame_idx
       else:
-        print >> log.v4, "skipping current frame adaptation, since the target seems to be lost"
+      #  print >> log.v4, "skipping current frame adaptation, since the target seems to be lost"
         do_step = False
       #else:
         # mix in first frame to avoid drift
