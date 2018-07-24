@@ -10,7 +10,7 @@ from Log import log
 from Network import Network
 from Trainer import Trainer
 from Util import load_wider_or_deeper_mxnet_model
-from datasets.Forward import forward, oneshot_forward, online_forward
+from datasets.Forward import forward, online_forward, base_forward
 from datasets.Loader import load_dataset
 
 
@@ -22,7 +22,7 @@ class Engine(object):
     self.load = config.unicode("load", "")
     self.task = config.unicode("task", "train")
     self.use_partialflow = config.bool("use_partialflow", False)
-    self.do_oneshot_or_online_or_offline = self.task in ("oneshot_forward", "oneshot", "online", "offline")
+    self.do_oneshot_or_online_or_offline = self.task in ("oneshot_forward", "oneshot", "online", "offline", "baseline")
     if self.do_oneshot_or_online_or_offline:
       assert config.int("batch_size_eval", 1) == 1
     self.need_train = self.task == "train" or self.do_oneshot_or_online_or_offline or self.task == "forward_train"
@@ -181,8 +181,8 @@ class Engine(object):
     elif self.do_oneshot_or_online_or_offline:
       save_logits = self.config.bool("save_logits", False)
       save_results = self.config.bool("save_results", False)
-      if self.task == "oneshot":
-        oneshot_forward(self, save_results=save_results, save_logits=save_logits)
+      if self.task == "baseline":
+        base_forward(self, save_results=save_results, save_logits=save_logits)
       elif self.task == "online":
         online_forward(self, save_results=save_results, save_logits=save_logits)
       else:

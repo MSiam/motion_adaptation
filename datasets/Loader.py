@@ -13,7 +13,7 @@ from datasets.YoutubeObjects.YoutubeObjects_oneshot import YoutubeObjectsOneshot
 def load_dataset(config, subset, session, coordinator):
   name = config.unicode("dataset").lower()
   task = config.unicode("task", "")
-  if task in ("oneshot", "oneshot_forward", "online", "offline"):
+  if task in ("oneshot", "oneshot_forward", "online", "offline", "baseline"):
     if name == "davis":
       return DavisOneshotDataset(config, subset, use_old_label=False)
     elif name in ("davis17", "davis2017"):

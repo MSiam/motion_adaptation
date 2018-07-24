@@ -2,6 +2,6 @@
 #do
 #    python main.py configs/DAVIS16_online $i
 #done
-python main.py configs/DAVIS16_online 0
+python main.py configs/DAVIS16_oneshot 0
 
 

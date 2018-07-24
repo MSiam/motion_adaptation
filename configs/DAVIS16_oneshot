@@ -3,7 +3,7 @@
 "davis_data_dir": "/home/nray1/ms/DAVIS/",
 
 "model": "DAVIS16_oneshot",
-"task": "oneshot",
+"task": "baseline",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
@@ -26,8 +26,8 @@
 "resize_mode_train": "",
 
 "resize_mode_val": "",
-"augmentors_val": ["gamma", "flip"],
-"n_test_samples": 10,
+"augmentors_val": [],
+"n_test_samples": 1,
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},

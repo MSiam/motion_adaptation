@@ -9,33 +9,6 @@ from Measures import compute_iou_for_binary_segmentation, compute_measures_for_b
 from datasets.Util.pascal_colormap import save_with_pascal_colormap
 
 
-def merge_multi_samples(ys, idx_imgs, target, verbose=True):
-  if target.ndim == 4:
-    target = numpy.squeeze(target, axis=-1)
-  accumulator = ys[0]
-  weights = numpy.ones(accumulator.shape[:2], accumulator.dtype)
-  initial_iou = compute_iou_for_binary_segmentation(ys[0].argmax(axis=-1), target)
-  print >> log.v5, "iou@1 samples:", initial_iou
-  curr_iou = initial_iou
-  for k, (y_val, idx_img_val) in enumerate(zip(ys[1:], idx_imgs[1:])):
-    indices = (idx_img_val[:, :, 0], idx_img_val[:, :, 1])
-    numpy.add.at(accumulator, indices, y_val)
-    numpy.add.at(weights, indices, 1)
-
-    # these four lines are just for iou and can be disabled
-    logits = accumulator / weights[:, :, numpy.newaxis]
-    y_argmax_val = numpy.argmax(logits, axis=-1)
-    curr_iou = compute_iou_for_binary_segmentation(y_argmax_val, target)
-    if verbose:
-      print >> log.v5, "iou@" + str(k + 2), "samples:", curr_iou
-  if verbose:
-    print >> log.v5, "iou improvement", curr_iou - initial_iou
-  # assert (weights > 0).all()
-  logits = numpy.expand_dims(accumulator / weights[:, :, numpy.newaxis], axis=0)
-  ys_argmax = numpy.expand_dims(numpy.argmax(logits, axis=-1), axis=3)
-  return logits, ys_argmax
-
-
 class Forwarder(object):
   __metaclass__ = ABCMeta
 
@@ -203,33 +176,3 @@ class ImageForwarder(BasicForwarder):
     extraction_vals = results[5:]
     ys_argmax_val = numpy.expand_dims(ys_argmax_val, axis=3)
     return ys_argmax_val, logits, targets_val, tags, n, extraction_vals
-
-  @staticmethod
-  def _flip_if_necessary(y, index_img):
-    assert y.shape[0] == 1
-    assert index_img.shape[0] == 1
-    if all(index_img[0, 0, 0] == [0, 0]):
-      flip = False
-    elif all(index_img[0, 0, -1] == [0, 0]):
-      flip = True
-    else:
-      assert False, "unexpected index img, probably unsupported augmentors were used during test time"
-    if flip:
-      return y[:, :, ::-1, :]
-    else:
-      return y
-
-  def _run_minibatch_multi_sample(self, feed_dict, ys, targets, tags, idx_imgs):
-    accumulator, index_img, targets_val, tags_val = self.session.run([ys, idx_imgs, targets, tags], feed_dict)
-    accumulator = self._flip_if_necessary(accumulator, index_img)
-
-    for k in xrange(self.n_test_samples - 1):
-      ys_val, index_img = self.session.run([ys, idx_imgs], feed_dict)
-      ys_val = self._flip_if_necessary(ys_val, index_img)
-      accumulator += ys_val
-
-    logits = accumulator / self.n_test_samples
-    ys_argmax_val = numpy.expand_dims(numpy.argmax(logits, axis=-1), axis=3)
-
-    n = 1
-    return ys_argmax_val, logits, targets_val, tags_val, n
