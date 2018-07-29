@@ -11,9 +11,9 @@ import cv2
 VOID_LABEL = 255
 import pickle
 
-class OnlineAdaptingForwarder(OneshotForwarder):
+class TeacherAdaptingForwarder(OneshotForwarder):
   def __init__(self, engine):
-    super(OnlineAdaptingForwarder, self).__init__(engine)
+    super(TeacherAdaptingForwarder, self).__init__(engine)
     self.n_adaptation_steps = self.config.int("n_adaptation_steps", 12)
     self.adaptation_interval = self.config.int("adaptation_interval", 4)
     self.adaptation_learning_rate = self.config.float("adaptation_learning_rate")
