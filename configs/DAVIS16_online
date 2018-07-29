@@ -16,6 +16,7 @@
 "targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS_oneshot/valid/",
 "trainsplit": 0,
 "adapt_th": 0.8,
+"few_shot_samples": 1,
 
 "load": "models/DAVIS16/DAVIS16",
 "n_finetune_steps": 0,
