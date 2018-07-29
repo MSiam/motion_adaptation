@@ -24,8 +24,8 @@ class OnlineAdaptingForwarder(OneshotForwarder):
     self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
-    self.mot_dir= '/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS16_oneshot/valid/'
-    self.neg_th = 0.8
+    self.mot_dir= self.config.unicode("targets_path", "")
+    self.neg_th = self.config.float("adapt_th", 0.8)
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
