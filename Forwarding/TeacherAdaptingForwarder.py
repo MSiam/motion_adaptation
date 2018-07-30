@@ -57,18 +57,18 @@ class TeacherAdaptingForwarder(OneshotForwarder):
               assert n_ == 1
               return logits_val_[0]
 
-          # Read adaptation target and postprocess it
-          f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%t, 'rb')
-#          f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
-          mask = pickle.load(f)[:,:,1]
-          mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
-          last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
-          last_mask[mask>self.neg_th]=1
-          last_mask= np.expand_dims(last_mask, axis=2)
-
           # Start Network Adaptation Only on first frame
           if t < self.few_shot_samples:
-              import pdb; pdb.set_trace()
+              # Read adaptation target and postprocess it
+#             f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb') # For DAVIS starts at 0, FORDS starts at 1
+              f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t+1), 'rb')
+#             f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
+              mask = pickle.load(f)[:,:,1]
+              mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
+              last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
+              last_mask[mask>self.neg_th]=1
+              last_mask= np.expand_dims(last_mask, axis=2)
+
               negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
 
           # Compute IoU measures

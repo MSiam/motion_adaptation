@@ -11,7 +11,7 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS_oneshot/valid/",
+"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/targets_filtered/",
 "adapt_th": 0.8,
 "few_shot_samples": 1,
 
@@ -34,9 +34,9 @@
 "adaptation_interval": 5,
 "adaptation_learning_rate": 0.00001,
 "posterior_positive_threshold": 0.8,
-"distance_negative_threshold": 220.0,
+"distance_negative_threshold": 20.0,
 "adaptation_loss_scale": 0.05,
-"adaptation_erosion_size": 15,
+"adaptation_erosion_size": 3,
 
 "adapt_debug": true,
 
