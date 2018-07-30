@@ -68,6 +68,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
 
           # Start Network Adaptation Only on first frame
           if t < self.few_shot_samples:
+              import pdb; pdb.set_trace()
               negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
 
           # Compute IoU measures
