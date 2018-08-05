@@ -35,9 +35,10 @@ class OneshotForwarder(ImageForwarder):
       video_ids = range(self.video_range[0], self.video_range[1])
     elif len(self.video_ids) != 0:
       video_ids = self.video_ids
-    else:
-      #video_ids = range(0, self.train_data.n_videos())
+    if self.config.vid != -1:
       video_ids= [self.config.vid]
+    else:
+      video_ids = range(0, self.train_data.n_videos())
       print('specific video_ids ', video_ids)
 
     for video_idx in video_ids:

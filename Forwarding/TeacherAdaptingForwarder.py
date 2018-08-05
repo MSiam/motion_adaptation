@@ -81,7 +81,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
 
           measures_video.append(measure)
 
-      measures_video[:-1] = measures_video[:-1]
+#      measures_video[:-1] = measures_video[:-1]
       measures_video = average_measures(measures_video)
       print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video
 

@@ -22,7 +22,7 @@ class Engine(object):
     self.load = config.unicode("load", "")
     self.task = config.unicode("task", "train")
     self.use_partialflow = config.bool("use_partialflow", False)
-    self.do_oneshot_or_online_or_offline = self.task in ("oneshot_forward", "oneshot", "online", "offline", "baseline")
+    self.do_oneshot_or_online_or_offline = self.task in ("teach", "baseline")
     if self.do_oneshot_or_online_or_offline:
       assert config.int("batch_size_eval", 1) == 1
     self.need_train = self.task == "train" or self.do_oneshot_or_online_or_offline or self.task == "forward_train"
@@ -183,7 +183,7 @@ class Engine(object):
       save_results = self.config.bool("save_results", False)
       if self.task == "baseline":
         base_forward(self, save_results=save_results, save_logits=save_logits)
-      elif self.task == "online":
+      elif self.task == "teach":
         online_forward(self, save_results=save_results, save_logits=save_logits)
       else:
         assert False, "Unknown task " + str(self.task)
