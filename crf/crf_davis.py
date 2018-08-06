@@ -104,8 +104,15 @@ def main():
   DAVIS_seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
                 "dog", "drift-chicane",  "drift-straight",  "goat", "horsejump-high", "kite-surf",
                 "libby", "motocross-jump", "paragliding-launch", "parkour", "scooter-black", "soapbox"]
+
+  FORDS_seqs = ["apple1","apple2", "banana","bottle1","bottle2","bottle3","bottle4","bottle5","bowl1",
+                "bowl2","bowl3","bowl4","bowl5","jar1","jar2","jar3","medicine1","medicine2","mug1","mug2",
+                "mug3","mug4","mug5","mug6","yogurt"]
+
   if 'DAVIS' in model:
       seqs = DAVIS_seqs
+  else:
+      seqs = FORDS_seqs
 
   #ious = []
   #for seq in seqs:

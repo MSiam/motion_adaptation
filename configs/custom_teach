@@ -1,7 +1,7 @@
 {
 "davis_data_dir": "/home/nray1/ms/FORDS_Scale/",
-"model": "DAVIS16_online",
-"task": "online",
+"model": "FORDS_online",
+"task": "teach",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
