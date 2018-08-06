@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import sys
 
-imgs_path = "/home/eren/Data/DAVIS/JPEGImages/480p/"
-annots_path = "/home/eren/Data/DAVIS/Annotations/480p/"
-preds_path_prefix = "/home/eren/Work/motion_adaptation/forwarded/"
+imgs_path = "JPEGImages/480p/"
+annots_path = "Annotations/480p/"
+preds_path_prefix = "/home/nray1/ms/temp/motion_adaptation/forwarded/"
 
 
 def convert_path(inp):
@@ -89,21 +89,27 @@ def do_seq(seq, model, save=True):
     # plt.figure()
     # plt.imshow(res)
     # plt.show()
-  return numpy.mean(ious[1:-1])
+  return numpy.mean(ious)#[1:-1])
 
 
 def main():
+  global imgs_path, annots_path;
 
   save = True
-  assert len(sys.argv) == 2
+  assert len(sys.argv) == 3
+  imgs_path = sys.argv[2] + imgs_path
+  annots_path = sys.argv[2] + annots_path
+
   model = sys.argv[1]
-  seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
-          "dog", "drift-chicane",  "drift-straight",  "goat", "horsejump-high", "kite-surf",
-          "libby", "motocross-jump", "paragliding-launch", "parkour", "scooter-black", "soapbox"]
+  DAVIS_seqs = ["blackswan", "bmx-trees", "breakdance", "camel", "car-roundabout", "car-shadow", "cows", "dance-twirl",
+                "dog", "drift-chicane",  "drift-straight",  "goat", "horsejump-high", "kite-surf",
+                "libby", "motocross-jump", "paragliding-launch", "parkour", "scooter-black", "soapbox"]
+  if 'DAVIS' in model:
+      seqs = DAVIS_seqs
 
   #ious = []
   #for seq in seqs:
-  #  iou = do_seq(seq, save=save)
+  #  iou = do_seq(seq, model, save=save)
   #  print iou
   #  ious.append(iou)
 

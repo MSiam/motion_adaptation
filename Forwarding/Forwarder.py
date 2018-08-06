@@ -176,3 +176,33 @@ class ImageForwarder(BasicForwarder):
     extraction_vals = results[5:]
     ys_argmax_val = numpy.expand_dims(ys_argmax_val, axis=3)
     return ys_argmax_val, logits, targets_val, tags, n, extraction_vals
+
+  @staticmethod
+  def _flip_if_necessary(y, index_img):
+    assert y.shape[0] == 1
+    assert index_img.shape[0] == 1
+    if all(index_img[0, 0, 0] == [0, 0]):
+      flip = False
+    elif all(index_img[0, 0, -1] == [0, 0]):
+      flip = True
+    else:
+      assert False, "unexpected index img, probably unsupported augmentors were used during test time"
+    if flip:
+      return y[:, :, ::-1, :]
+    else:
+      return y
+
+  def _run_minibatch_multi_sample(self, feed_dict, ys, targets, tags, idx_imgs):
+    accumulator, index_img, targets_val, tags_val = self.session.run([ys, idx_imgs, targets, tags], feed_dict)
+    accumulator = self._flip_if_necessary(accumulator, index_img)
+
+    for k in xrange(self.n_test_samples - 1):
+      ys_val, index_img = self.session.run([ys, idx_imgs], feed_dict)
+      ys_val = self._flip_if_necessary(ys_val, index_img)
+      accumulator += ys_val
+
+    logits = accumulator / self.n_test_samples
+    ys_argmax_val = numpy.expand_dims(numpy.argmax(logits, axis=-1), axis=3)
+
+    n = 1
+    return ys_argmax_val, logits, targets_val, tags_val, n

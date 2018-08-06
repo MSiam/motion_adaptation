@@ -5,6 +5,7 @@
 #    python main.py configs/custom_online $i
 #done
 #python main.py configs/custom_online 0
-python main.py configs/DAVIS16_unsupervised -1
+#python main.py configs/DAVIS16_unsupervised -1
+python main.py configs/DAVIS16_teach -1
 
-
+#python crf/crf_davis.py DAVIS16_unsupervised /home/nray1/ms/DAVIS/

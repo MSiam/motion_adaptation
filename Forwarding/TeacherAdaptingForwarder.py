@@ -27,6 +27,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     self.mot_dir= self.config.unicode("targets_path", "")
     self.neg_th = self.config.float("adapt_th", 0.8)
     self.few_shot_samples = self.config.int("few_shot_samples", 1)
+    self.dataset = self.config.unicode("davis_data_dir", "")
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -46,6 +47,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
       n_frames = data.num_examples_per_epoch()
 
       measures_video = []
+      measures_video.append(measures[0])
 #      files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
       dirs= sorted(os.listdir(self.mot_dir))
       for t in xrange(0, n_frames):
@@ -60,9 +62,13 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           # Start Network Adaptation Only on first frame
           if t < self.few_shot_samples:
               # Read adaptation target and postprocess it
-#             f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb') # For DAVIS starts at 0, FORDS starts at 1
-              f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t+1), 'rb')
-#             f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
+              # For DAVIS starts at 0, FORDS starts at 1 for frame numbers, FBMS use annotation files
+              if "DAVIS" in self.dataset:
+                 f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
+              elif "FORD" in self.dataset:
+                  f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t+1), 'rb')
+              else:
+                 f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
               mask = pickle.load(f)[:,:,1]
               mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
               last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
@@ -77,11 +83,9 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           assert n == 1
           assert len(measures) == 1
           measure = measures[0]
-          print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
-
+          print >> log.v5, "Motion Adapted frame", t, ":", measure
           measures_video.append(measure)
 
-#      measures_video[:-1] = measures_video[:-1]
       measures_video = average_measures(measures_video)
       print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video
 

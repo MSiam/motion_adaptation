@@ -33,6 +33,7 @@ class UnsupervisedForwarder(OneshotForwarder):
       n_frames = data.num_examples_per_epoch()
 
       measures_video = []
+      measures_video.append(measures[0])
       for t in xrange(0, n_frames):
           # Compute IoU measures
           n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
@@ -40,7 +41,7 @@ class UnsupervisedForwarder(OneshotForwarder):
           assert n == 1
           assert len(measures) == 1
           measure = measures[0]
-          print >> log.v5, "Motion Adapted frame", t, ":", measure, " factor ", float(ys_argmax_val.sum())/(854*480)
+          print >> log.v5, "frame", t, ":", measure
 
           measures_video.append(measure)
 
