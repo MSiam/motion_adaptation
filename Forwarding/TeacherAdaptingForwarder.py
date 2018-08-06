@@ -48,8 +48,11 @@ class TeacherAdaptingForwarder(OneshotForwarder):
 
       measures_video = []
       measures_video.append(measures[0])
-#      files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
       dirs= sorted(os.listdir(self.mot_dir))
+      if "FBMS" in self.dataset:
+          files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
+      elif "FORD" in self.dataset:
+          files_annotations = sorted(os.listdir(self.mot_dir+dirs[video_idx]))
       for t in xrange(0, n_frames):
 
           # Probability Map Function
@@ -66,7 +69,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
               if "DAVIS" in self.dataset:
                  f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
               elif "FORD" in self.dataset:
-                  f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t+1), 'rb')
+                  f= open(self.mot_dir+dirs[video_idx]+'/'+files_annotations[t], 'rb')
               else:
                  f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
               mask = pickle.load(f)[:,:,1]
