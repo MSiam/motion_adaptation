@@ -116,7 +116,23 @@ class SegmentationSoftmax(Layer):
   @staticmethod
   def create_loss(loss_str, fraction, no_void_label_mask, targets, tower_setup, void_label, y_pred):
     ce = None
-    if "ce" in loss_str:
+    if "cont" in loss_str:
+      targets = tf.expand_dims(targets, axis=3)
+      targets_f = 1 - targets
+      targets = tf.concat((targets_f, targets), axis=3)
+      #eps = 1e-8
+      #soft_P = tf.nn.sigmoid(y_pred[..., 1])
+      #soft_P = tf.reshape(soft_P, (-1,))
+      #soft_f = tf.nn.sigmoid(y_pred[..., 0])
+      #soft_f = tf.reshape(soft_f, (-1,))
+      #targets = tf.reshape(targets, (-1,))
+      #ce = targets * tf.log(soft_P + eps)+ targets * tf.log(1 - soft_f + eps)
+      ce = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=targets, name="ce")
+      if void_label is not None:
+        mask = tf.cast(no_void_label_mask, tower_setup.dtype)
+        ce *= mask
+
+    elif "ce" in loss_str:
       ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y_pred, labels=targets, name="ce")
 
       if void_label is not None:
@@ -126,15 +142,17 @@ class SegmentationSoftmax(Layer):
       ce = tf.reduce_mean(ce, axis=[1, 2])
       ce = tf.reduce_sum(ce, axis=0)
       loss = ce
-    elif loss_str == "bootstrapped_ce":
+    elif loss_str in ["bootstrapped_ce", "bootstrapped_ce_cont"]:
       bs_ce = bootstrapped_ce_loss(ce, fraction)
       loss = bs_ce
     else:
       assert False, "Unknown loss " + loss_str
     return loss
 
-  def create_measures(self, n_classes, pred, targets):
+  def create_measures(self, n_classes, pred, targets, loss="ce"):
     measures = {}
+    if "cont" in loss:
+        targets = tf.cast(targets, tf.int64)
     conf_matrix = tf.py_func(create_confusion_matrix, [pred, targets, self.n_classes_current], [tf.int64])
     measures[Constants.CONFUSION_MATRIX] = conf_matrix[0]
     return measures
@@ -173,7 +191,8 @@ class SegmentationSoftmax(Layer):
         y_pred = tf.image.resize_images(y_pred, tf.shape(targets)[1:3])
 
       pred = tf.argmax(y_pred, axis=3)
-      targets = tf.cast(targets, tf.int64)
+      if "cont" not in loss:
+          targets = tf.cast(targets, tf.int64)
       targets = tf.squeeze(targets, axis=3)
 
       # TODO: Void label is not considered in the iou calculation.
@@ -186,6 +205,6 @@ class SegmentationSoftmax(Layer):
       else:
         no_void_label_mask = None
 
-      self.measures = self.create_measures(n_classes, pred, targets)
+      self.measures = self.create_measures(n_classes, pred, targets, loss)
       self.loss = self.create_loss(loss, fraction, no_void_label_mask, targets, tower_setup, void_label, y_pred)
       self.add_scalar_summary(self.loss, "loss")

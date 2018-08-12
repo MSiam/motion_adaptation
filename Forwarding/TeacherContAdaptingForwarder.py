@@ -11,21 +11,17 @@ import cv2
 VOID_LABEL = 255
 import pickle
 
-class TeacherAdaptingForwarder(OneshotForwarder):
+class TeacherContAdaptingForwarder(OneshotForwarder):
   def __init__(self, engine):
-    super(TeacherAdaptingForwarder, self).__init__(engine)
+    super(TeacherContAdaptingForwarder, self).__init__(engine)
     self.n_adaptation_steps = self.config.int("n_adaptation_steps", 12)
     self.adaptation_interval = self.config.int("adaptation_interval", 4)
     self.adaptation_learning_rate = self.config.float("adaptation_learning_rate")
-    self.posterior_positive_threshold = self.config.float("posterior_positive_threshold", 0.97)
-    self.distance_negative_threshold = self.config.float("distance_negative_threshold", 150.0)
     self.adaptation_loss_scale = self.config.float("adaptation_loss_scale", 0.1)
     self.debug = self.config.bool("adapt_debug", False)
-    self.erosion_size = self.config.int("adaptation_erosion_size", 20)
     self.use_positives = self.config.bool("use_positives", True)
     self.use_negatives = self.config.bool("use_negatives", True)
     self.mot_dir= self.config.unicode("targets_path", "")
-    self.neg_th = self.config.float("adapt_th", 0.8)
     self.few_shot_samples = self.config.int("few_shot_samples", 1)
     self.dataset = self.config.unicode("davis_data_dir", "")
 
@@ -74,11 +70,9 @@ class TeacherAdaptingForwarder(OneshotForwarder):
                  f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
               mask = pickle.load(f)[:,:,1]
               mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
-              last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
-              last_mask[mask>self.neg_th]=1
-              last_mask= np.expand_dims(last_mask, axis=2)
+              last_mask= np.expand_dims(mask, axis=2)
 
-              negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
+              self._adapt(video_idx, t, last_mask, get_posteriors)
 
           # Compute IoU measures
           n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
@@ -92,44 +86,13 @@ class TeacherAdaptingForwarder(OneshotForwarder):
       measures_video = average_measures(measures_video)
       print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video
 
-  def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn, adapt_flag=0):
-    """
-    adapt_flag (int): 0:do not adapt, 1:adapt with hard labels based on teacher,
-                      2:adapt on hard labels from last mask
-    """
-
-    # Perform Mask erosion to reduce effect of false positive
-    eroded_mask = grey_erosion(last_mask, size=(self.erosion_size, self.erosion_size, 1))
-
-    # Compute distance transform
-    dt = distance_transform_edt(numpy.logical_not(eroded_mask))
-
-    # Adaptation target initialize
-    adaptation_target = numpy.zeros_like(last_mask)
-    adaptation_target[:] = VOID_LABEL
-
-    # Retrieve current probability map to adapt with
-    current_posteriors = get_posteriors_fn()
-    if adapt_flag == 2:
-        positives = current_posteriors[:, :, 1] > self.posterior_positive_threshold
-    elif adapt_flag == 1:
-        positives = last_mask==1
-
-    if self.use_positives:
-      adaptation_target[positives] = 1
-
-    # Threshold based on distance transform
-    threshold = self.distance_negative_threshold
-    negatives = dt > threshold
-    if self.use_negatives:
-      adaptation_target[negatives] = 0
-
-    do_adaptation = eroded_mask.sum() > 0
+  def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn):
+    adaptation_target = last_mask
+    do_adaptation = adaptation_target.sum() > 0
 
     # Save adaptation targets for debugging
     if self.debug:
       adaptation_target_visualization = adaptation_target.copy()
-      adaptation_target_visualization[adaptation_target == 1] = 128
       if not do_adaptation:
         adaptation_target_visualization[:] = VOID_LABEL
       from scipy.misc import imsave
@@ -157,7 +120,3 @@ class TeacherAdaptingForwarder(OneshotForwarder):
         assert n_imgs == 1
         print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \
             self.train_data.video_tag(video_idx), "loss:", loss
-    if do_adaptation:
-      return negatives
-    else:
-      return None

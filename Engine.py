@@ -10,9 +10,12 @@ from Log import log
 from Network import Network
 from Trainer import Trainer
 from Util import load_wider_or_deeper_mxnet_model
-from datasets.Forward import forward, online_forward, base_forward
+from datasets.Forward import forward, online_forward, base_forward, online_forward_cont
 from datasets.Loader import load_dataset
 
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 class Engine(object):
   def __init__(self, config):
@@ -22,7 +25,7 @@ class Engine(object):
     self.load = config.unicode("load", "")
     self.task = config.unicode("task", "train")
     self.use_partialflow = config.bool("use_partialflow", False)
-    self.do_oneshot_or_online_or_offline = self.task in ("teach", "baseline")
+    self.do_oneshot_or_online_or_offline = self.task in ("teach", "baseline", "teachcont")
     if self.do_oneshot_or_online_or_offline:
       assert config.int("batch_size_eval", 1) == 1
     self.need_train = self.task == "train" or self.do_oneshot_or_online_or_offline or self.task == "forward_train"
@@ -183,8 +186,11 @@ class Engine(object):
       save_results = self.config.bool("save_results", False)
       if self.task == "baseline":
         base_forward(self, save_results=save_results, save_logits=save_logits)
-      elif self.task == "teach":
+      elif self.task == "teach" :
         online_forward(self, save_results=save_results, save_logits=save_logits)
+      elif self.task == "teachcont" :
+        online_forward_cont(self, save_results=save_results, save_logits=save_logits)
+
       else:
         assert False, "Unknown task " + str(self.task)
     else:

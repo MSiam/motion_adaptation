@@ -2,6 +2,7 @@ from Forwarding.Forwarder import ImageForwarder
 from Forwarding.BaseForwarder import BaseForwarder
 from Forwarding.OneshotForwarder import OneshotForwarder
 from Forwarding.TeacherAdaptingForwarder import TeacherAdaptingForwarder
+from Forwarding.TeacherContAdaptingForwarder import TeacherContAdaptingForwarder
 from Forwarding.UnsupervisedForwarder import UnsupervisedForwarder
 
 
@@ -21,4 +22,8 @@ def base_forward(engine, save_results, save_logits):
 
 def online_forward(engine, save_results, save_logits):
   forwarder = TeacherAdaptingForwarder(engine)
+  forwarder.forward(None, None, save_results, save_logits)
+
+def online_forward_cont(engine, save_results, save_logits):
+  forwarder = TeacherContAdaptingForwarder(engine)
   forwarder.forward(None, None, save_results, save_logits)

@@ -1,7 +1,9 @@
 {
-"davis_data_dir": "/home/nray1/ms/FORDS_Scale/",
-"model": "FORDS_online",
-"task": "teach",
+#TODO: change this!
+"davis_data_dir": "/home/nray1/ms/DAVIS/",
+
+"model": "DAVIS16_online_cont",
+"task": "teachcont",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
@@ -11,11 +13,10 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/targets_filtered/",
+"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS16_oneshot/valid/",
+"trainsplit": 0,
 "adapt_th": 0.8,
 "few_shot_samples": 1,
-
-"trainsplit": 0,
 
 "load": "models/DAVIS16/DAVIS16",
 "n_finetune_steps": 0,
@@ -34,11 +35,12 @@
 "adaptation_interval": 5,
 "adaptation_learning_rate": 0.00001,
 "posterior_positive_threshold": 0.8,
-"distance_negative_threshold": 20.0,
+"distance_negative_threshold": 220.0,
 "adaptation_loss_scale": 0.05,
-"adaptation_erosion_size": 3,
+"adaptation_erosion_size": 15,
 
 "adapt_debug": true,
+
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},
@@ -70,10 +72,9 @@
 
   "conv1": {"class": "Conv", "batch_norm": true, "n_features": 512, "bias": true, "dilation": 12, "from": ["res16"]},
 
-  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
+  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce_cont", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
              "resize_targets": true, "input_activation": "relu", "from": ["conv1"]}
 
 }
 
 }
-
