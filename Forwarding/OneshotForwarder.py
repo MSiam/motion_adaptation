@@ -31,6 +31,7 @@ class OneshotForwarder(ImageForwarder):
     self.engine.train_network.get_output_layer().adjust_weights_for_multiple_objects(self.session, n_objects)
 
   def forward(self, network, data, save_results=True, save_logits=False):
+
     if len(self.video_range) != 0:
       video_ids = range(self.video_range[0], self.video_range[1])
     elif len(self.video_ids) != 0:
@@ -40,7 +41,6 @@ class OneshotForwarder(ImageForwarder):
     else:
       video_ids = range(0, self.train_data.n_videos())
       print('specific video_ids ', video_ids)
-
     for video_idx in video_ids:
 #    video_idx= 1
       tag = self.train_data.video_tag(video_idx)

@@ -1,7 +1,7 @@
 {
-"davis_data_dir": "/home/nray1/ms/FORDS_Scale/",
-"model": "FORDS_online",
-"task": "teach",
+"davis_data_dir": "/ms/FORDS_Rotation/",
+"model": "FORDS_cont_online",
+"task": "teachcont",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
@@ -70,7 +70,7 @@
 
   "conv1": {"class": "Conv", "batch_norm": true, "n_features": 512, "bias": true, "dilation": 12, "from": ["res16"]},
 
-  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
+  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce_cont", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
              "resize_targets": true, "input_activation": "relu", "from": ["conv1"]}
 
 }

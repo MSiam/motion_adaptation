@@ -11,7 +11,8 @@ DAVIS2017_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS2017/"
 DAVIS_FLOW_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS_data/"
 DAVIS_LUCID_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS_data/lucid/"
 DAVIS2017_LUCID_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS2017_data/lucid/"
-DAVIS_IMAGE_SIZE = (480, None)#854)
+#DAVIS_IMAGE_SIZE = (480, None)#854)
+DAVIS_IMAGE_SIZE = (None, None)#854)
 DAVIS2017_IMAGE_SIZE = (480, None)
 
 

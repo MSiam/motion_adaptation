@@ -14,7 +14,7 @@ import sys
 
 imgs_path = "JPEGImages/480p/"
 annots_path = "Annotations/480p/"
-preds_path_prefix = "/home/nray1/ms/temp/motion_adaptation/forwarded/"
+preds_path_prefix = "/ms/motion_adaptation/forwarded/"
 
 
 def convert_path(inp):

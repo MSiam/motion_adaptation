@@ -45,10 +45,15 @@ class TeacherContAdaptingForwarder(OneshotForwarder):
       measures_video = []
       measures_video.append(measures[0])
       dirs= sorted(os.listdir(self.mot_dir))
-      if "FBMS" in self.dataset:
-          files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
-      elif "FORD" in self.dataset:
-          files_annotations = sorted(os.listdir(self.mot_dir+dirs[video_idx]))
+      files_annotations = sorted(os.listdir(self.mot_dir+data.video_tag(video_idx)))
+#      if "FBMS" in self.dataset:
+#          files_annotations= sorted(os.listdir('/home/nray1/ms/FBMS/Annotations/480p/'+data.video_tag(video_idx) ))
+#      elif "FORDS_Rotation" in self.dataset or \
+#              "PDB" in self.mot_dir or \
+#              "FORDS_tasks" in self.dataset:
+#          files_annotations = sorted(os.listdir(self.mot_dir+data.video_tag(video_idx)))
+#      elif "FORD" in self.dataset:
+#          files_annotations = sorted(os.listdir(self.mot_dir+dirs[video_idx]))
       for t in xrange(0, n_frames):
 
           # Probability Map Function
@@ -62,13 +67,20 @@ class TeacherContAdaptingForwarder(OneshotForwarder):
           if t < self.few_shot_samples:
               # Read adaptation target and postprocess it
               # For DAVIS starts at 0, FORDS starts at 1 for frame numbers, FBMS use annotation files
-              if "DAVIS" in self.dataset:
-                 f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
-              elif "FORD" in self.dataset:
-                  f= open(self.mot_dir+dirs[video_idx]+'/'+files_annotations[t], 'rb')
+              if "FBMS" in self.mot_dir:
+                  mask = cv2.imread(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 0)
               else:
-                 f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
-              mask = pickle.load(f)[:,:,1]
+                  if "FORDS" in self.dataset:
+                      f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 'rb')
+#                  elif "FORDS_Rotation" in self.dataset:
+#                      f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 'rb')
+#                  elif "FORD" in self.dataset:
+#                      f= open(self.mot_dir+dirs[video_idx]+'/'+files_annotations[t], 'rb')
+                  elif "DAVIS" in self.dataset:
+                     f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
+#                  else:
+#                     f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
+                  mask = pickle.load(f)[:,:,1]
               mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
               last_mask= np.expand_dims(mask, axis=2)
 

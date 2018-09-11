@@ -53,8 +53,12 @@ def _load_frame(idx, im, an, imgs, flow_dir, flow_into_past, flow_into_future, f
 
   flow_past, flow_future = _load_flows(idx, imgs, im_val.shape, flow_dir, flow_into_past, flow_into_future,
                                        flow_as_angle)
-
+#  try:
   an_raw = scipy.ndimage.imread(an)
+#  except:
+#      print('Empty ann ', an)
+#      import numpy as np
+#      an_raw = np.zeros_like(im_val)
   if "adaptation" in an.split("/")[-1]:
     an_postproc = an_raw
     an_postproc[an_raw == 128] = 1

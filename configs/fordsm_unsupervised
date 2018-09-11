@@ -1,5 +1,5 @@
 {
-"davis_data_dir": "/home/nray1/ms/FORDS_Scale/",
+"davis_data_dir": "/ms/FORDS_Rotation/",
 "model": "FORDS_unsupervised",
 "task": "baseline",
 "dataset": "DAVIS",
