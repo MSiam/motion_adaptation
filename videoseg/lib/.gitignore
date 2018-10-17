@@ -1,6 +1,0 @@
-extra_libs/
-pydensecrf/
-pyflow/
-mr_saliency/
-**/*.pyc
-**/*.npy
