@@ -1,6 +1,6 @@
 {
 #TODO: change this!
-"davis_data_dir": "/home/nray1/ms/DAVIS/",
+"davis_data_dir": "/home/mennatul/Datasets/DAVIS/",
 
 "model": "DAVIS16_online",
 "task": "teach",
@@ -13,7 +13,7 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/DAVIS16_oneshot/valid/",
+"targets_path": "/home/mennatul/Datasets/DAVIS/Targets/",
 "trainsplit": 0,
 "adapt_th": 0.8,
 "few_shot_samples": 1,

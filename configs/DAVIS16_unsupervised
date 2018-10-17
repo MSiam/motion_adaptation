@@ -1,6 +1,6 @@
 {
 #TODO: change this!
-"davis_data_dir": "/home/nray1/ms/DAVIS/",
+"davis_data_dir": "/home/mennatul/Datasets/DAVIS/",
 
 "model": "DAVIS16_unsupervised",
 "task": "baseline",

@@ -1,5 +1,5 @@
 {
-"davis_data_dir": "/home/nray1/ms/FBMS/",
+"davis_data_dir": "/home/mennatul/Datasets/FBMS/",
 "model": "FBMS_online",
 "task": "teach",
 "dataset": "DAVIS",
@@ -11,7 +11,7 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/ms/FBMS_targets/",
+"targets_path": "/home/mennatul/Datasets/Targets/",
 "adapt_th": 0.8,
 "few_shot_samples": 1,
 

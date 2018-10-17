@@ -1,5 +1,5 @@
 {
-"davis_data_dir": "/ms/FORDS_Rotation/",
+"davis_data_dir": "/home/mennatul/Datasets/LORDSHRI/FORDS_Scale/",
 "model": "FORDS_online",
 "task": "teach",
 "dataset": "DAVIS",
@@ -11,7 +11,7 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/targets_filtered/",
+"targets_path": "/home/mennatul/Datasets/LORDSHRI/Targets/",
 "adapt_th": 0.8,
 "few_shot_samples": 1,
 
