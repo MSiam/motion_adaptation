@@ -55,3 +55,6 @@ A newer version of the dataset with the refined and full segmentation annotation
 
 This work is a continuation on Team Alberta KUKA Innovation Award submission.
 [Video Demo KUKA](https://www.youtube.com/watch?v=aLcw73dt_Oo)
+
+Dataset webpage under construction here:
+[LORDS-HRI Dataset](https://msiam.github.io/lordshri/)
