@@ -1,6 +1,6 @@
 # Video Segmentation using Teacher-Student Adaptation in a Human Robot Interaction (HRI) Setting.
-The official implementation used in our paper:
-Coming Soon ...
+The official implementation used in our [paper](https://arxiv.org/abs/1810.07733):
+
 
 <div align="center">
 <img src="https://github.com/MSiam/motion_adaptation/blob/master/figures/overview.png" width="70%" height="70%"><br><br>
@@ -58,3 +58,12 @@ This work is a continuation on Team Alberta KUKA Innovation Award submission.
 
 Dataset webpage under construction here:
 [LORDS-HRI Dataset](https://msiam.github.io/lordshri/)
+
+## Cite
+Please cite our work if you use the dataset or method outlined:
+@article{siam2018video,
+  title={Video Segmentation using Teacher-Student Adaptation in a Human Robot Interaction (HRI) Setting},
+  author={Siam, Mennatullah and Jiang, Chen and Lu, Steven and Petrich, Laura and Gamal, Mahmoud and Elhoseiny, Mohamed and Jagersand, Martin},
+  journal={arXiv preprint arXiv:1810.07733},
+  year={2018}
+}
