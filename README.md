@@ -62,15 +62,11 @@ Dataset webpage under construction here:
 
 ## Cite
 Please cite our work if you use the dataset or method outlined:
-
+```
 @article{siam2018video,
-
   title={Video Segmentation using Teacher-Student Adaptation in a Human Robot Interaction (HRI) Setting},
-  
   author={Siam, Mennatullah and Jiang, Chen and Lu, Steven and Petrich, Laura and Gamal, Mahmoud and Elhoseiny, Mohamed and Jagersand, Martin},
-  
   journal={arXiv preprint arXiv:1810.07733},
-  
   year={2018}
-  
 }
+```
