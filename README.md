@@ -52,13 +52,13 @@ A newer version of the dataset with the refined and full segmentation annotation
 </div>
 
 
-[Download Link](https://drive.google.com/file/d/1lq2q-ivxppfbefj9pryVDK3NEvbjTnn1/view?usp=sharing)
+[Download Data Formatted for MotAdapt](https://drive.google.com/open?id=1lq2q-ivxppfbefj9pryVDK3NEvbjTnn1)
 
 This work is a continuation on Team Alberta KUKA Innovation Award submission.
 [Video Demo KUKA](https://www.youtube.com/watch?v=aLcw73dt_Oo)
 
 Dataset webpage under construction here:
-[LORDS-HRI Dataset](https://msiam.github.io/lordshri/)
+[LORDS-HRI Original Dataset](https://msiam.github.io/lordshri/)
 
 ## Cite
 Please cite our work if you use the dataset or method outlined:
