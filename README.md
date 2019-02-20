@@ -57,7 +57,9 @@ Explanation of the most important config parameters:
 [Download Data Formatted for MotAdapt](https://drive.google.com/open?id=1lq2q-ivxppfbefj9pryVDK3NEvbjTnn1)
 
 This work is a continuation on Team Alberta KUKA Innovation Award submission.
+
 [Video Demo KUKA](https://www.youtube.com/watch?v=aLcw73dt_Oo)
+
 [Video Demo for Our Paper](https://www.youtube.com/watch?v=36hMbAs8e0c&t=17s)
 
 [IVOS Dataset](https://msiam.github.io/ivos/)
