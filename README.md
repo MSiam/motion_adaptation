@@ -1,13 +1,16 @@
 # Video Segmentation using Teacher-Student Adaptation in a Human Robot Interaction (HRI) Setting.
-The official implementation used in our [paper](https://arxiv.org/abs/1810.07733).
+The official implementation used in our [paper](https://arxiv.org/abs/1810.07733), in ICRA'19.
 
-Video segmentation is a challenging task that has many applications in robotics. Learning segmentation from few examples on-line is important for robotics in unstructured environments. The total number of objects and their variation in the real world is intractable, but for a specific task the robot deals with a small subset. Our network is taught, by a human moving a hand-held object through different poses. A novel two-stream motion and appearance "teacher" network provides pseudo-labels. These labels are used to adapt an appearance "student" network. Segmentation can be used to support a variety of robot vision functionality, such as grasping or affordance segmentation. We propose different variants of motion adaptation training and extensively compare against the state-of-the-art methods. We collected a carefully designed dataset in the human robot interaction (HRI) setting. We denote our dataset as (L)ow-shot (O)bject (R)ecognition, (D)etection and (S)egmentation using HRI. Our dataset contains teaching videos of different hand-held objects moving in translation, scale and rotation. It contains kitchen manipulation tasks as well, performed by humans and robots. Our proposed method outperforms the state-of-the-art on DAVIS and FBMS with 7% and 1.2% in F-measure respectively. In our more challenging LORDS-HRI dataset, our approach achieves significantly better performance with 46.7% and 24.2% relative improvement in mIoU over the baseline. 
+Video object segmentation is an essential task in robot manipulation to facilitate grasping and learning affordances. Incremental learning is important for robotics in unstructured environments, since the total number of objects and their variations can be intractable. Inspired by the children learning process, human robot interaction (HRI) can be utilized to teach robots about the world guided by humans similar to how children learn from a parent or a teacher. A human teacher can
+show potential objects of interest to the robot, which is able to self adapt to the teaching signal without providing manual segmentation labels. We propose a novel teacher-student learning paradigm to teach robots about their surrounding environment. A two-stream motion and appearance "teacher" network provides pseudo-labels to adapt an appearance "student" network. The student network is able to segment the newly learned objects in other scenes, whether they are static or in
+motion. We also introduce a carefully designed dataset that serves the proposed HRI setup, denoted as (I)nteractive (V)ideo (O)bject (S)egmentation. Our IVOS dataset contains teaching videos of different objects, and manipulation tasks. Unlike previous datasets, IVOS provides manipulation tasks sequences with segmentation annotation along with the waypoints for the robot trajectories. It also provides segmentation annotation for the different transformations such as translation, scale,
+planar rotation, and out-of-plane rotation. Our proposed adaptation method outperforms the state-of-the-art on DAVIS and FBMS with 6.8% and 1.2% in F-measure respectively. It improves over the baseline on IVOS dataset with 46.1% and 25.9% in mIoU. 
 
 <div align="center">
 <img src="https://github.com/MSiam/motion_adaptation/blob/master/figures/overview.png" width="70%" height="70%"><br><br>
 </div>
 
-This implementation is based on the semi-supervised video segmentation method OnaVos.
+This implementation is based on the semi-supervised video segmentation method OnaVos implementation.
 [Onavos](https://www.vision.rwth-aachen.de/page/OnAVOS)
 
 ## Installation
@@ -40,8 +43,7 @@ Explanation of the most important config parameters:
 * adapt_th: threshold used to obtain the positive training examples
 * distance_negative_threshold: distance threshold used to select the negative examples
 
-## LORDS-HRI Dataset
-A newer version of the dataset with the refined and full segmentation annotations will soon be released.
+## IVOS Dataset
 
 <div align="center">
 <img src="https://github.com/MSiam/motion_adaptation/blob/master/figures/dataset1.png" width="70%" height="70%"><br><br>
@@ -56,9 +58,9 @@ A newer version of the dataset with the refined and full segmentation annotation
 
 This work is a continuation on Team Alberta KUKA Innovation Award submission.
 [Video Demo KUKA](https://www.youtube.com/watch?v=aLcw73dt_Oo)
+[Video Demo for Our Paper](https://www.youtube.com/watch?v=36hMbAs8e0c&t=17s)
 
-Dataset webpage under construction here:
-[LORDS-HRI Original Dataset](https://msiam.github.io/lordshri/)
+[IVOS Dataset](https://msiam.github.io/ivos/)
 
 ## Cite
 Please cite our work if you use the dataset or method outlined:
