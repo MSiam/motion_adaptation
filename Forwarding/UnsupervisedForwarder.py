@@ -27,7 +27,6 @@ class UnsupervisedForwarder(OneshotForwarder):
       # Process minibatch forward for first frame
       n, measures, ys_argmax_val, logits_val, targets_val = self._process_forward_minibatch(
         data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=0)
-      last_mask = targets_val[0]
 
       assert n == 1
       n_frames = data.num_examples_per_epoch()
@@ -45,6 +44,5 @@ class UnsupervisedForwarder(OneshotForwarder):
 
           measures_video.append(measure)
 
-      #measures_video[:-1] = measures_video[:-1]
       measures_video = average_measures(measures_video)
       print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video

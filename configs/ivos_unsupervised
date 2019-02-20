@@ -1,8 +1,9 @@
 {
-"davis_data_dir": "/ms/FORDS_tasks_Byobj/",
-"model": "FORDS_tasks_online",
-"task": "teach",
+"davis_data_dir": "/IVOS_Scale/",
+"model": "IVOS_unsupervised",
+"task": "baseline",
 "dataset": "DAVIS",
+"load": "models/DAVIS16/DAVIS16",
 "batch_size": 1,
 "batch_size_eval": 1,
 "log_verbosity": 5,
@@ -11,13 +12,9 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/targets_filtered/",
-"adapt_th": 0.8,
-"few_shot_samples": 1,
 
-"trainsplit": 0,
+"split": "dev",
 
-"load": "models/DAVIS16/DAVIS16",
 "n_finetune_steps": 0,
 "learning_rates": "{1: 0.000003}",
 "save_oneshot": true,
@@ -30,15 +27,6 @@
 "augmentors_val": [],
 "n_test_samples": 1,
 
-"n_adaptation_steps": 15,
-"adaptation_interval": 5,
-"adaptation_learning_rate": 0.00001,
-"posterior_positive_threshold": 0.8,
-"distance_negative_threshold": 20.0,
-"adaptation_loss_scale": 0.1,
-"adaptation_erosion_size": 3,
-
-"adapt_debug": true,
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},
@@ -76,4 +64,3 @@
 }
 
 }
-

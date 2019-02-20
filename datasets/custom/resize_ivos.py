@@ -29,7 +29,7 @@ for d in sorted(os.listdir(mask_dir)):
             img_res[:img.shape[0], :, :] = img
             cv2.imwrite(img_dir+d+'/'+f2, img_res)
 
-#mask_dir= '/home/nray1/ms/2stream_motion_adaptation/MTLMotion/forwarded/targets_filtered/'
+#mask_dir= '/IVOS/Targets/'
 #
 #for d in sorted(os.listdir(mask_dir)):
 #    if "plate" in d or "coffe" in d or "milk" in d or "cereal" in d:

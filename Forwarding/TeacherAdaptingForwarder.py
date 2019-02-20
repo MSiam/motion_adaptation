@@ -28,6 +28,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     self.neg_th = self.config.float("adapt_th", 0.8)
     self.few_shot_samples = self.config.int("few_shot_samples", 1)
     self.dataset = self.config.unicode("davis_data_dir", "")
+    self.adapt_flag = 1
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -50,11 +51,6 @@ class TeacherAdaptingForwarder(OneshotForwarder):
       measures_video.append(measures[0])
       dirs= sorted(os.listdir(self.mot_dir))
       files_annotations = sorted(os.listdir(self.mot_dir+data.video_tag(video_idx)))
-      #elif "FORDS_Rotation" in self.dataset or \
-      #     "FBMS" in self.dataset or \
-      #     "FORDS_tasks" in self.dataset:
-      #elif "FORD" in self.dataset:
-      #    files_annotations = sorted(os.listdir(self.mot_dir+dirs[video_idx]))
 
       for t in xrange(0, n_frames):
 
@@ -72,23 +68,18 @@ class TeacherAdaptingForwarder(OneshotForwarder):
               if "FBMS" in self.mot_dir:
                   mask = cv2.imread(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 0)
               else:
-                  if "FORDS" in self.dataset:
+                  if "IVOS" in self.dataset:
                       f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 'rb')
-#                  elif "FORDS_Rotation" in self.dataset:
-#                      f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 'rb')
-#                  elif "FORD" in self.dataset:
-#                      f= open(self.mot_dir+dirs[video_idx]+'/'+files_annotations[t], 'rb')
                   elif "DAVIS" in self.dataset:
                      f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
-#                  else:
-#                     f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t].split('.')[0]+'.pickle', 'rb')
                   mask = pickle.load(f)[:,:,1]
               mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
               last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
               last_mask[mask>self.neg_th]=1
               last_mask= np.expand_dims(last_mask, axis=2)
 
-              negatives = self._adapt(video_idx, t, last_mask, get_posteriors, adapt_flag=1)
+              negatives = self._adapt(video_idx, t, last_mask, get_posteriors,
+                                      adapt_flag=self.adapt_flag)
 
           # Compute IoU measures
           n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
@@ -105,34 +96,38 @@ class TeacherAdaptingForwarder(OneshotForwarder):
   def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn, adapt_flag=0):
     """
     adapt_flag (int): 0:do not adapt, 1:adapt with hard labels based on teacher,
-                      2:adapt on hard labels from last mask
+                      2:adapt on hard labels from last mask, 3:use continuous labels
     """
+    if adapt_flag < 3:
+        # Perform Mask erosion to reduce effect of false positive
+        eroded_mask = grey_erosion(last_mask, size=(self.erosion_size, self.erosion_size, 1))
 
-    # Perform Mask erosion to reduce effect of false positive
-    eroded_mask = grey_erosion(last_mask, size=(self.erosion_size, self.erosion_size, 1))
+        # Compute distance transform
+        dt = distance_transform_edt(numpy.logical_not(eroded_mask))
 
-    # Compute distance transform
-    dt = distance_transform_edt(numpy.logical_not(eroded_mask))
+        # Adaptation target initialize
+        adaptation_target = numpy.zeros_like(last_mask)
+        adaptation_target[:] = VOID_LABEL
 
-    # Adaptation target initialize
-    adaptation_target = numpy.zeros_like(last_mask)
-    adaptation_target[:] = VOID_LABEL
+        # Retrieve current probability map to adapt with
+        current_posteriors = get_posteriors_fn()
+        if adapt_flag == 2: # adapt with current prob map
+            positives = current_posteriors[:, :, 1] > self.posterior_positive_threshold
+        elif adapt_flag == 1: # adapt with provided adaptation target form teacher
+            positives = last_mask==1
 
-    # Retrieve current probability map to adapt with
-    current_posteriors = get_posteriors_fn()
-    if adapt_flag == 2:
-        positives = current_posteriors[:, :, 1] > self.posterior_positive_threshold
-    elif adapt_flag == 1:
-        positives = last_mask==1
+        if self.use_positives:
+          adaptation_target[positives] = 1
 
-    if self.use_positives:
-      adaptation_target[positives] = 1
+        # Threshold based on distance transform
+        threshold = self.distance_negative_threshold
+        negatives = dt > threshold
+        if self.use_negatives:
+          adaptation_target[negatives] = 0
+    else:
+        # adapt with the provided continuous adaptation target
+        adaptation_target = last_mask
 
-    # Threshold based on distance transform
-    threshold = self.distance_negative_threshold
-    negatives = dt > threshold
-    if self.use_negatives:
-      adaptation_target[negatives] = 0
 
     do_adaptation = eroded_mask.sum() > 0
 

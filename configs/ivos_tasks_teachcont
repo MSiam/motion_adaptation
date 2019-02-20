@@ -1,7 +1,7 @@
 {
-"davis_data_dir": "/home/mennatul/Datasets/LORDSHRI/FORDS_Scale/",
-"model": "FORDS_online",
-"task": "teach",
+"davis_data_dir": "/IVOS_tasks_Byobj/",
+"model": "IVOS_tasks_teachcont",
+"task": "teachcont",
 "dataset": "DAVIS",
 "batch_size": 1,
 "batch_size_eval": 1,
@@ -11,7 +11,7 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-"targets_path": "/home/mennatul/Datasets/LORDSHRI/Targets/",
+"targets_path": "IVOS/Targets/",
 "adapt_th": 0.8,
 "few_shot_samples": 1,
 
@@ -70,7 +70,7 @@
 
   "conv1": {"class": "Conv", "batch_norm": true, "n_features": 512, "bias": true, "dilation": 12, "from": ["res16"]},
 
-  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
+  "output": {"class": "SegmentationSoftmax", "loss": "bootstrapped_ce_cont", "fraction": 0.25, "dilation": 12, "filter_size": [3,3],
              "resize_targets": true, "input_activation": "relu", "from": ["conv1"]}
 
 }
