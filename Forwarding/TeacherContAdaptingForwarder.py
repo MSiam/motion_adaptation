@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 VOID_LABEL = 255
 import pickle
+from Forwarding.TeacherAdaptingForwarder import TeacherAdaptingForwarder
 
 class TeacherContAdaptingForwarder(TeacherAdaptingForwarder):
   def __init__(self, engine):
