@@ -23,6 +23,12 @@ class FeedImageDataset(Dataset):
 
     self.img_placeholder = tf.placeholder(tf.float32, shape=(None, None, n_color_channels), name="img_placeholder")
     self.label_placeholder = tf.placeholder(tf.uint8, shape=(None, None, 1), name="label_placeholder")
+    self.twostream = config.bool("twostream", False)
+    if self.twostream:
+        self.flow_placeholder = tf.placeholder(tf.float32, shape=(None, None, n_color_channels), name="flow_placeholder")
+    else:
+        self.flow_placeholder = None
+
     self.tag_placeholder = tf.placeholder(tf.string, shape=(), name="tag_placeholder")
 
     self.flow_into_past_placeholder = None
@@ -45,13 +51,14 @@ class FeedImageDataset(Dataset):
     return self.label_placeholder
 
   def create_feed_dict(self, img, label, tag, old_label=None, flow_past = None, flow_future = None,
-                       u0=None, u1=None):
+                       u0=None, u1=None, flow=None):
 
     tensors = create_tensor_dict(unnormalized_img=img, label=label, tag=tag, old_label=old_label,
                                  flow_past=flow_past,flow_future=flow_future,
-                                 u0=u0, u1=u1)
+                                 u0=u0, u1=u1, flow=flow)
 
     self.feed_dict = {self.img_placeholder: tensors["unnormalized_img"],
+                      self.flow_placeholder: tensors["flow"],
                       self.label_placeholder: tensors["label"],
                       self.tag_placeholder: tensors["tag"]}
 
@@ -84,7 +91,7 @@ class FeedImageDataset(Dataset):
                                  tag=self.tag_placeholder, raw_label=self.label_placeholder,
                                  old_label=self.old_label_placeholder, flow_past=self.flow_into_past_placeholder,
                                  flow_future=self.flow_into_future_placeholder, use_index_img=use_index_img,
-                                 u0=self.u0_placeholder, u1=self.u1_placeholder)
+                                 u0=self.u0_placeholder, u1=self.u1_placeholder, flow=self.flow_placeholder)
 
     # TODO: need to set shape here?
 
@@ -177,7 +184,8 @@ class OneshotImageDataset(FeedImageDataset):
       feed_dict[self.flow_into_past_placeholder] = tensors["flow_past"]
     if "flow_future" in tensors:
       feed_dict[self.flow_into_future_placeholder] = tensors["flow_future"]
-
+    if "flow" in tensors:
+      feed_dict[self.flow_placeholder] = tensors["flow"]
     return feed_dict
 
   def label_for_video_frame(self, frame_idx):

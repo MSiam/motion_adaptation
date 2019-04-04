@@ -22,7 +22,7 @@ def get_layer_class(layer_class):
 
 
 class Network(object):
-  def build_tower(self, network_def, x_image, y_ref, void_label, n_classes, tower_setup):
+  def build_tower(self, network_def, x_image, y_ref, void_label, n_classes, tower_setup, flow=None):
     use_dropout = not tower_setup.is_training
     gpu_str = "/gpu:" + str(tower_setup.gpu)
     if tower_setup.is_main_train_tower:
@@ -52,7 +52,13 @@ class Network(object):
           inputs = sum([layers[x].outputs for x in layer_def["from"]], [])
           del layer_def["from"]
         else:
-          inputs = [x_image]
+          if '_1' in name:
+              if flow is not None:
+                 inputs = [flow]
+              else:
+                 raise Exception("Expecting Flow input")
+          else:
+              inputs = [x_image]
         if "concat" in layer_def:
           concat = sum([layers[x].outputs for x in layer_def["concat"]], [])
           layer_def["concat"] = concat
@@ -73,7 +79,6 @@ class Network(object):
           layer_def["dropout"] = 0.0
         if "tower_setup" in args:
           layer_def["tower_setup"] = tower_setup
-
         #check if all args are specified
         defaults = spec[3]
         if defaults is None:
@@ -82,7 +87,6 @@ class Network(object):
         non_default_args = args[1:n_non_default_args]  # without self
         for arg in non_default_args:
           assert arg in layer_def, (name, arg)
-
         layer = class_(**layer_def)
 
         if tower_setup.is_main_train_tower:
@@ -96,6 +100,7 @@ class Network(object):
       n = tf.shape(y_ref)[0]
       assert len(output_layer.outputs) == 1, len(output_layer.outputs)
       loss, measures, y_softmax = output_layer.loss, output_layer.measures, output_layer.outputs[0]
+
       regularizers_tower = []
       update_ops_tower = []
       for l in layers.values():
@@ -105,7 +110,9 @@ class Network(object):
       n_params = sum([l.n_params for l in layers.values()])
       return loss, measures, y_softmax, n, n_params, regularizers_tower, update_ops_tower, layers
 
-  def build_network(self, config, x_image, y_ref, void_label, n_classes, is_training, freeze_batchnorm):
+  def build_network(self, config, x_image, y_ref, void_label, n_classes, is_training,
+                    freeze_batchnorm, flow=None):
+
     gpus = config.int_list("gpus")
     #only use one gpu for eval
     if not is_training:
@@ -141,7 +148,7 @@ class Network(object):
 
       with tf.variable_scope(tf.get_variable_scope(), reuse=True if not first else None):
         loss, measures, y_softmax, n, n_params_tower, regularizers, update_ops_tower, layers = self.build_tower(
-          network_def, x_image_tower, y_ref_tower, void_label, n_classes, tower_setup)
+          network_def, x_image_tower, y_ref_tower, void_label, n_classes, tower_setup, flow=flow)
 
       tower_layers.append(layers)
       tower_losses.append(loss / tf.cast(n, tower_setup.dtype))
@@ -198,13 +205,21 @@ class Network(object):
           if self.batch_size == -1:
             self.batch_size = config.int("batch_size")
       n_classes = dataset.num_classes()
+
       if config.bool("adjustable_output_layer", False):
         n_classes = None
       self.global_step = global_step
+
       inputs_tensors_dict = dataset.create_input_tensors_dict(self.batch_size)
+
       #inputs and labels are not optional
       inputs = inputs_tensors_dict["inputs"]
       labels = inputs_tensors_dict["labels"]
+      if "flow" in inputs_tensors_dict.keys():
+          flows = inputs_tensors_dict["flow"]
+      else:
+          flows = None
+
       self.raw_labels = inputs_tensors_dict.get("raw_labels", None)
       self.index_imgs = inputs_tensors_dict.get("index_imgs", None)
       self.tags = inputs_tensors_dict.get("tags")
@@ -215,7 +230,7 @@ class Network(object):
       self.summaries += dataset.summaries
       self.losses, self.regularizers, self.loss_summed, self.y_softmax, self.measures_accumulated, self.n_imgs, \
           self.n_params, self.update_ops, self.tower_setups, self.tower_layers = self.build_network(
-            config, inputs, labels, void_label, n_classes, training, freeze_batchnorm)
+            config, inputs, labels, void_label, n_classes, training, freeze_batchnorm, flow=flows)
 
   def get_output_layer(self):
     layers = self.tower_layers[0]

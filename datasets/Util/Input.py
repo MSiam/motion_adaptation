@@ -52,6 +52,9 @@ def assemble_input_tensors(tensors, img_size=(None, None)):
   img.set_shape(img_size + [n_input_channels])
 
   tensors_out = {"inputs": img, "labels": label, "raw_labels": raw_label, "tags": tag}
+  if "flow" in tensors:
+      tensors_out["flow"] = tensors["flow"]
+
   if "index_img" in tensors:
     tensors_out["index_imgs"] = tensors["index_img"]
   return tensors_out

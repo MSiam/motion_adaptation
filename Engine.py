@@ -25,6 +25,7 @@ class Engine(object):
     self.load = config.unicode("load", "")
     self.task = config.unicode("task", "train")
     self.use_partialflow = config.bool("use_partialflow", False)
+    self.twostream = config.bool("twostream", False)
     self.do_oneshot_or_online_or_offline = self.task in ("teach", "baseline", "teachcont")
     if self.do_oneshot_or_online_or_offline:
       assert config.int("batch_size_eval", 1) == 1
@@ -107,6 +108,21 @@ class Engine(object):
       if self.load_init.endswith(".pickle"):
         print >> log.v1, "trying to initialize model from wider-or-deeper mxnet model", self.load_init
         load_wider_or_deeper_mxnet_model(self.load_init, self.session)
+      elif self.task == 'train' and self.twostream:
+        fn = self.load_init
+        print >> log.v1, "initializing model from", fn
+        assert self.load_init_saver is not None
+        self.load_init_saver.restore(self.session, fn)
+
+        variables_2stream = [v for v in tf.all_variables() if '_1' in v.name.split('Adam_1')[0]]
+        update_ops = []
+        for v in variables_2stream:
+            tkns = v.name.split('_1')
+            for v2 in tf.all_variables():
+                if v2.name == tkns[0]+tkns[1]:
+                    update_ops += [v.assign(v2)]
+                    break
+        self.session.run(update_ops)
       else:
         fn = self.load_init
         print >> log.v1, "initializing model from", fn

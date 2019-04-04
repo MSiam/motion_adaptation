@@ -48,8 +48,12 @@ def _load_flows(idx, imgs, shape, flow_dir, flow_into_past, flow_into_future, fl
   return flow_past, flow_future
 
 
-def _load_frame(idx, im, an, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle):
+def _load_frame(idx, im, an, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle, flow=None):
   im_val = scipy.ndimage.imread(im) / 255.0
+  if flow is not None:
+      flow_val = scipy.ndimage.imread(flow) / 255.0
+  else:
+      flow_val = None
 
   flow_past, flow_future = _load_flows(idx, imgs, im_val.shape, flow_dir, flow_into_past, flow_into_future,
                                        flow_as_angle)
@@ -68,20 +72,22 @@ def _load_frame(idx, im, an, imgs, flow_dir, flow_into_past, flow_into_future, f
   tag_val = im
 
   tensors = create_tensor_dict(unnormalized_img=im_val, label=an_val, tag=tag_val, flow_past=flow_past,
-                               flow_future=flow_future)
+                               flow_future=flow_future, flow=flow_val)
   return tensors
 
 
-def _load_video(imgs, ans, flow_dir=None, flow_into_past=False, flow_into_future=False, flow_as_angle=False):
+def _load_video(imgs, ans, flow_dir=None, flow_into_past=False, flow_into_future=False,
+                flow_as_angle=False, flow=None):
   video = []
-  for idx_, (im_, an_) in enumerate(zip(imgs, ans)):
-    tensors_ = _load_frame(idx_, im_, an_, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle)
-    video.append(tensors_)
 
-  #from joblib import Parallel, delayed
-  #video = Parallel(n_jobs=20, backend="threading")(
-  #  delayed(_load_frame)(idx_, im_, an_, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle)
-  #  for idx_, (im_, an_) in enumerate(zip(imgs, ans)))
+  if flow is None:
+      for idx_, (im_, an_) in enumerate(zip(imgs, ans)):
+        tensors_ = _load_frame(idx_, im_, an_, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle)
+        video.append(tensors_)
+  else:
+     for idx_, (im_, an_, flow_) in enumerate(zip(imgs, ans, flow)):
+        tensors_ = _load_frame(idx_, im_, an_, imgs, flow_dir, flow_into_past, flow_into_future, flow_as_angle, flow=flow_)
+        video.append(tensors_)
 
   return video
 
@@ -90,6 +96,8 @@ class DavisOneshotDataset(OneshotImageDataset):
   def __init__(self, config, subset, use_old_label):
     self.flow_into_past = config.bool("flow_into_past", False)
     self.flow_into_future = config.bool("flow_into_future", False)
+    self.twostream = config.bool("twostream", False)
+
     super(DavisOneshotDataset, self).__init__(config, NUM_CLASSES, VOID_LABEL, subset, image_size=DAVIS_IMAGE_SIZE,
                                               use_old_label=use_old_label, flow_into_past=self.flow_into_past,
                                               flow_into_future=self.flow_into_future)
@@ -150,7 +158,7 @@ class DavisOneshotDataset(OneshotImageDataset):
       return DavisOneshotDataset._video_data
 
     print >> log.v4, "loading davis dataset..."
-    imgs, ans = read_image_and_annotation_list(fn, data_dir)
+    imgs, ans, flows = read_image_and_annotation_list(fn, data_dir, flow_flag=self.twostream)
     video_tags = unique_list([im.split("/")[-2] for im in imgs])
     imgs_seqs = group_into_sequences(imgs)
     ans_seqs = group_into_sequences(ans)
@@ -171,9 +179,15 @@ class DavisOneshotDataset(OneshotImageDataset):
 #      imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
 #                                    (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]])
 
-    videos[video_range[0]:video_range[1]] = [_load_video(
-        imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
-                                   (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]]]
+    if self.twostream:
+        flows_seqs = group_into_sequences(flows)
+        videos[video_range[0]:video_range[1]] = [_load_video(
+            imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle, flows) for
+                                       (imgs, ans, flows) in zip(imgs_seqs, ans_seqs, flows_seqs)[video_range[0]:video_range[1]]]
+    else:
+        videos[video_range[0]:video_range[1]] = [_load_video(
+            imgs, ans, self.flow_dir, self.flow_into_past, self.flow_into_future, self.flow_as_angle) for
+                                       (imgs, ans) in zip(imgs_seqs, ans_seqs)[video_range[0]:video_range[1]]]
 
     DavisOneshotDataset._video_data = (video_tags, videos)
     end = time.time()

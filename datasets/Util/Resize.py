@@ -70,6 +70,9 @@ def random_crop_tensors(tensors, size):
   tensors_cropped = tensors.copy()
   tensors_cropped["unnormalized_img"], offset = random_crop_image(tensors["unnormalized_img"], size)
   tensors_cropped["label"], offset = random_crop_image(tensors["label"], size, offset)
+  if "flow" in tensors.keys():
+      tensors_cropped["flow"], offset = random_crop_image(tensors["flow"], size, offset)
+
   tensors_cropped["raw_label"] = tensors_cropped["label"]
   if "old_label" in tensors:
     tensors_cropped["old_label"], offset = random_crop_image(tensors["old_label"], size, offset)
@@ -117,13 +120,13 @@ def resize(tensors, resize_mode, input_size):
 def resize_random_scale_with_min_size(tensors, min_size, min_scale=0.7, max_scale=1.3):
   assert min_size is not None
   img = tensors["unnormalized_img"]
-
   h = tf.shape(img)[0]
   w = tf.shape(img)[1]
   shorter_side = tf.minimum(h, w)
   min_scale_factor = tf.cast(min_size, tf.float32) / tf.cast(shorter_side, tf.float32)
   min_scale = tf.maximum(min_scale, min_scale_factor)
   max_scale = tf.maximum(max_scale, min_scale_factor)
+
   scale_factor = tf.random_uniform(shape=[], minval=min_scale, maxval=max_scale, dtype=tf.float32)
   scaled_size = tf.cast(tf.round(tf.cast(tf.shape(img)[:2], tf.float32) * scale_factor), tf.int32)
   tensors_out = resize_fixed_size(tensors, scaled_size)
@@ -150,6 +153,11 @@ def resize_fixed_size(tensors, input_size):
     u1 = resize_image(u1, input_size, False)
     tensors_out[Constants.DT_POS] = u1
     print "Shape of u1: " + `u1.get_shape()`
+  if "flow" in tensors.keys():
+    flow = tensors["flow"]
+    flow = resize_image(flow, input_size, True)
+    tensors_out["flow"] = flow
+
   tensors_out["unnormalized_img"] = img
   tensors_out["label"] = label
 
@@ -185,6 +193,9 @@ def resize_unchanged(input_size, tensors):
         tensor = tensors[key]
         tensor.set_shape((input_size[0], input_size[1], n_channels))
         tensors_out[key] = tensor
+
+    if "flow" in tensors.keys():
+        _set_shape("flow", 3)
 
     _set_shape("old_label", 1)
     _set_shape(Constants.DT_NEG, 2)

@@ -234,15 +234,16 @@ class Collapse(Layer):
       out = global_avg_pool(h_act)
     self.outputs = [out]
 
-
 class SiameseConcat(Layer):
-  def __init__(self, name, inputs, tower_setup):
+  def __init__(self, name, inputs, tower_setup, trainable=True):
     super(SiameseConcat, self).__init__()
-    curr, n_features_inp = prepare_input(inputs)
-    # old_shape = smart_shape(curr)
-    # batch_size = old_shape[0]
-    out = tf.reshape(curr, [-1, n_features_inp * 2])
-    self.outputs = [out]
+    dims = [int(inp.get_shape()[3]) for inp in inputs]
+    dim = sum(dims)
+    in1 = tf.nn.relu(inputs[0])
+    in2 = tf.nn.relu(inputs[1])
+    curr = tf.multiply(in1, in2)
+    #curr = tf.add(inputs[0], inputs[1])
+    self.outputs = [curr]
 
 class DoNothingLayer(Layer):
   def __init__(self, name, inputs, tower_setup):

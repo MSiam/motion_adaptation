@@ -157,6 +157,12 @@ class FlipAugmentor(object):
         aug_label = tf.cond(doit, lambda: label_flipped, lambda: label)
         aug_tensors["label"] = aug_label
 
+      if "flow" in tensors:
+          flow = tensors["flow"]
+          flow_flipped = tf.reverse(flow, axis=[1])
+          aug_flow = tf.cond(doit, lambda: flow_flipped, lambda: flow)
+          aug_tensors["flow"] = aug_flow
+
       if "old_label" in tensors:
         old_label = tensors["old_label"]
         old_label_flipped = tf.reverse(old_label, axis=[1])
@@ -239,6 +245,7 @@ class ScaleAugmentor(object):
     if "flow_future" in aug_tensors:
       aug_tensors["flow_future"] *= scale
 
+    _scale("flow", True, offset)
     return aug_tensors
 
 

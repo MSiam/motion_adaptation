@@ -11,14 +11,16 @@ DAVIS2017_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS2017/"
 DAVIS_FLOW_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS_data/"
 DAVIS_LUCID_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS_data/lucid/"
 DAVIS2017_LUCID_DEFAULT_PATH = "/fastwork/" + username() + "/mywork/data/DAVIS2017_data/lucid/"
-#DAVIS_IMAGE_SIZE = (480, None)#854)
-DAVIS_IMAGE_SIZE = (None, None)#854)
+#DAVIS_IMAGE_SIZE = (480, 854)
+DAVIS_IMAGE_SIZE = (None, None)
 DAVIS2017_IMAGE_SIZE = (480, None)
 
 
-def read_image_and_annotation_list(fn, data_dir):
+def read_image_and_annotation_list(fn, data_dir, flow_flag=False):
   imgs = []
   ans = []
+  if flow_flag:
+      flows = []
   with open(fn) as f:
     for l in f:
       sp = l.split()
@@ -26,7 +28,13 @@ def read_image_and_annotation_list(fn, data_dir):
       im = data_dir + sp[0]
       imgs.append(im)
       ans.append(an)
-  return imgs, ans
+      if flow_flag:
+          flow = data_dir + sp[0].replace('JPEGImages', 'OpticalFlow')
+          flows.append(flow)
+  if flow_flag:
+      return imgs, ans, flows
+  else:
+      return imgs, ans, None
 
 
 def group_into_sequences(fns):
@@ -63,14 +71,21 @@ def get_input_list_file(subset, trainsplit):
 class DAVISDataset(ImageDataset):
   def __init__(self, config, subset, coord, fraction=1.0):
     super(DAVISDataset, self).__init__("davis", DAVIS_DEFAULT_PATH, NUM_CLASSES, config, subset, coord,
-                                       DAVIS_IMAGE_SIZE, VOID_LABEL, fraction, lambda x: x / 255, ignore_classes=[VOID_LABEL])
+                                       DAVIS_IMAGE_SIZE, VOID_LABEL, fraction, lambda x: x / 255,
+                                       ignore_classes=[VOID_LABEL])
     self.trainsplit = config.int("trainsplit", 0)
+    self.twostream = config.bool("twostream", False)
 
   def read_inputfile_lists(self):
     assert self.subset in ("train", "valid"), self.subset
     list_file = get_input_list_file(self.subset, self.trainsplit)
-    imgs, ans = read_image_and_annotation_list(self.data_dir + list_file, self.data_dir)
-    return imgs, ans
+    if self.twostream:
+        imgs, ans, flows = read_image_and_annotation_list(self.data_dir + list_file,
+                                                          self.data_dir, flow_flag=True)
+        return imgs, ans, flows
+    else:
+        imgs, ans, _ = read_image_and_annotation_list(self.data_dir + list_file, self.data_dir)
+        return imgs, ans, None
 
 
 ###### DAVIS 2017 #####

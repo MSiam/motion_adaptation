@@ -80,10 +80,10 @@ class ImageDataset(Dataset):
       return
     self.inputfile_lists = self.read_inputfile_lists()
     # make sure all lists have the same length
-    assert all([len(l) == len(self.inputfile_lists[0]) for l in self.inputfile_lists])
+    assert all([len(l) == len(self.inputfile_lists[0]) for l in self.inputfile_lists if l is not None])
     if self.fraction < 1.0:
       n = int(self.fraction * len(self.inputfile_lists[0]))
-      self.inputfile_lists = [l[:n] for l in self.inputfile_lists]
+      self.inputfile_lists = [l[:n] for l in self.inputfile_lists if l is not None]
 
   def _parse_augmentors_and_shuffle(self):
     if self.subset == "train":
@@ -98,12 +98,12 @@ class ImageDataset(Dataset):
       augmentors = parse_augmentors(augmentor_strs, self.void_label())
     return augmentors, shuffle
 
-  def create_input_tensors_dict(self, batch_size):
+  def create_input_tensors_dict(self, batch_size, twostream=False):
     self._load_inputfile_lists()
     resize_mode, input_size = self._get_resize_params(self.subset, self.image_size, ResizeMode.Unchanged)
     augmentors, shuffle = self._parse_augmentors_and_shuffle()
 
-    inputfile_tensors = [tf.convert_to_tensor(l, dtype=tf.string) for l in self.inputfile_lists]
+    inputfile_tensors = [tf.convert_to_tensor(l, dtype=tf.string) for l in self.inputfile_lists if l is not None]
     queue = tf.train.slice_input_producer(inputfile_tensors, shuffle=shuffle)
 
     tensors_dict, summaries = self._read_inputfiles(queue, resize_mode, input_size, augmentors)
@@ -122,6 +122,9 @@ class ImageDataset(Dataset):
       summ0 = tf.summary.image("inputs", input_img)
       summ1 = tf.summary.image("labels", tensors_dict["labels"] * 255)  # will only work well for binary segmentation
       summaries = [summ0, summ1]
+      if "flow" in tensors_dict.keys():
+          summ2 = tf.summary.image("flow", tensors_dict["flow"])
+          summaries.append(summ2)
 
       # count is incremented after each summary creation. This helps us to keep track of the number of channels
       count = 0

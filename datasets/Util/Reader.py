@@ -10,7 +10,7 @@ from datasets.Util.Util import load_flow_from_flo, create_index_image, smart_sha
 
 
 def create_tensor_dict(unnormalized_img, label, tag, raw_label=None, old_label=None, flow_past=None, flow_future=None,
-                       use_index_img=False, u0=None, u1=None):
+                       use_index_img=False, u0=None, u1=None, flow=None):
   tensors = {"unnormalized_img": unnormalized_img, "label": label, "tag": tag}
   if raw_label is None:
     tensors["raw_label"] = label
@@ -30,6 +30,8 @@ def create_tensor_dict(unnormalized_img, label, tag, raw_label=None, old_label=N
     shape = smart_shape(unnormalized_img)
     index_img = create_index_image(shape[0], shape[1])
     tensors["index_img"] = index_img
+  if flow is not None:
+      tensors["flow"] = flow
   return tensors
 
 
@@ -64,6 +66,12 @@ def read_images_from_disk(input_queue, input_size, resize_mode, label_postproc_f
 
   old_label = u0 = u1 = None
 
+  if len(input_queue) == 3:
+      flow_path = input_queue[2]
+      flow = img_load_fn(img_path=flow_path)
+  else:
+      flow = None
+
   if 'old_label' in labels.keys():
     old_label = labels['old_label']
     old_label.set_shape(img.get_shape().as_list()[:-1] + [1])
@@ -88,7 +96,7 @@ def read_images_from_disk(input_queue, input_size, resize_mode, label_postproc_f
 
   tensors = create_tensor_dict(unnormalized_img=img, label=label,
                                old_label=old_label, u0=u0, u1=u1,
-                               tag=im_path, raw_label=label)
+                               tag=im_path, raw_label=label, flow=flow)
 
   tensors = resize(tensors, resize_mode, input_size)
   tensors = apply_augmentors(tensors, augmentors)

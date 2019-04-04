@@ -2,7 +2,7 @@
 #TODO: change this!
 "davis_data_dir": "/home/menna/Datasets/DAVIS/",
 
-"model": "DAVIS16_unsupervised",
+"model": "DAVIS16_2stream_unsupervised",
 "task": "baseline",
 "dataset": "DAVIS",
 "batch_size": 1,
@@ -13,10 +13,9 @@
 "freeze_batchnorm": true,
 "save": true,
 "num_epochs": 20,
-
 "trainsplit": 0,
 
-"load": "models/DAVIS16/DAVIS16",
+"load": "models/DAVIS_2stream/DAVIS_objectness-00000001",
 "n_finetune_steps": 0,
 "learning_rates": "{1: 0.000003}",
 "save_oneshot": true,
@@ -28,26 +27,51 @@
 "resize_mode_val": "",
 "augmentors_val": [],
 "n_test_samples": 1,
+"twostream": true,
 
 "network": {
   "conv0":  {"class": "Conv", "n_features": 64, "activation": "linear"},
+  "conv0_1":  {"class": "Conv", "n_features": 64, "activation": "linear"},
 
   "res0":   {"class": "ResidualUnit2", "n_features": 128, "strides": [[2,2], [1,1]], "from": ["conv0"]},
+  "res0_1":   {"class": "ResidualUnit2", "n_features": 128, "strides": [[2,2], [1,1]], "from": ["conv0_1"]},
+
   "res1":   {"class": "ResidualUnit2", "from": ["res0"]},
+  "res1_1":   {"class": "ResidualUnit2", "from": ["res0_1"]},
+
   "res2":   {"class": "ResidualUnit2", "from": ["res1"]},
+  "res2_1":   {"class": "ResidualUnit2", "from": ["res1_1"]},
 
   "res3":   {"class": "ResidualUnit2", "n_features": 256, "strides": [[2,2], [1,1]], "from": ["res2"]},
+  "res3_1":   {"class": "ResidualUnit2", "n_features": 256, "strides": [[2,2], [1,1]], "from": ["res2_1"]},
+
   "res4":   {"class": "ResidualUnit2", "from": ["res3"]},
+  "res4_1":   {"class": "ResidualUnit2", "from": ["res3_1"]},
+
   "res5":   {"class": "ResidualUnit2", "from": ["res4"]},
-
+  "res5_1":   {"class": "ResidualUnit2", "from": ["res4_1"]},
+ 
   "res6":   {"class": "ResidualUnit2", "n_features": 512, "strides": [[2,2], [1,1]], "from": ["res5"]},
-  "res7":   {"class": "ResidualUnit2", "from": ["res6"]},
-  "res8":   {"class": "ResidualUnit2", "from": ["res7"]},
-  "res9":   {"class": "ResidualUnit2", "from": ["res8"]},
-  "res10":  {"class": "ResidualUnit2", "from": ["res9"]},
-  "res11":  {"class": "ResidualUnit2", "from": ["res10"]},
+  "res6_1":   {"class": "ResidualUnit2", "n_features": 512, "strides": [[2,2], [1,1]], "from": ["res5_1"]},
 
-  "res12":  {"class": "ResidualUnit2", "n_features": [512, 1024], "dilations": [1, 2], "from": ["res11"]},
+  "res7":   {"class": "ResidualUnit2", "from": ["res6"]},
+  "res7_1":   {"class": "ResidualUnit2", "from": ["res6_1"]},
+
+  "res8":   {"class": "ResidualUnit2", "from": ["res7"]},
+  "res8_1":   {"class": "ResidualUnit2", "from": ["res7_1"]},
+
+  "res9":   {"class": "ResidualUnit2", "from": ["res8"]},
+  "res9_1":   {"class": "ResidualUnit2", "from": ["res8_1"]},
+
+  "res10":  {"class": "ResidualUnit2", "from": ["res9"]},
+  "res10_1":  {"class": "ResidualUnit2", "from": ["res9_1"]},
+
+  "res11":  {"class": "ResidualUnit2", "from": ["res10"]},
+  "res11_1":  {"class": "ResidualUnit2", "from": ["res10_1"]},
+    
+  "concat1": {"class": "SiameseConcat", "from": ["res11", "res11_1"]},
+
+  "res12":  {"class": "ResidualUnit2", "n_features": [512, 1024], "dilations": [1, 2], "from": ["concat1"]},
   "res13":  {"class": "ResidualUnit2", "n_features": [512, 1024], "dilations": [2, 2], "from": ["res12"]},
   "res14":  {"class": "ResidualUnit2", "n_features": [512, 1024], "dilations": [2, 2], "from": ["res13"]},
 
