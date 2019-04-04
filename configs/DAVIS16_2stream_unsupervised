@@ -1,10 +1,10 @@
 {
 #TODO: change this!
-"davis_data_dir": "/home/menna/Datasets/DAVIS/",
+"data_dir": "/home/menna/WORK/motion_adaptation/flownet2tf/teaching/",
 
 "model": "DAVIS16_2stream_unsupervised",
 "task": "baseline",
-"dataset": "DAVIS",
+"dataset": "camera",
 "batch_size": 1,
 "batch_size_eval": 1,
 "log_verbosity": 5,

@@ -15,7 +15,7 @@ from datasets.Loader import load_dataset
 
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 class Engine(object):
   def __init__(self, config):
@@ -33,8 +33,6 @@ class Engine(object):
 
     config1 = tf.ConfigProto(allow_soft_placement=True)
     config1.gpu_options.allow_growth = True
-
-#    self.session = tf.InteractiveSession(config=tf.ConfigProto(allow_soft_placement=True))
     self.session = tf.InteractiveSession(config=config1)
     self.coordinator = tf.train.Coordinator()
     self.valid_data = load_dataset(config, "valid", self.session, self.coordinator)

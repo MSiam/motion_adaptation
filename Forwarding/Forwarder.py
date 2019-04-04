@@ -163,18 +163,31 @@ class ImageForwarder(BasicForwarder):
         feed_dict, ys, ys_argmax, extractions, targets, network.tags, network.n_imgs, save_logits)
 
     measures = []
-    for y_argmax, logit, target, tag in zip(ys_argmax_val, logits_val, targets_val, tags_val):
-      measure = self._process_forward_result(y_argmax, logit, target, tag, extraction_vals, main_folder, save_results)
-      measures.append(measure)
+    if targets_val is not None:
+        for y_argmax, logit, target, tag in zip(ys_argmax_val, logits_val, targets_val, tags_val):
+          measure = self._process_forward_result(y_argmax, logit, target, tag, extraction_vals, main_folder, save_results)
+          measures.append(measure)
+    else:
+        measures = []
     return n, measures, ys_argmax_val, logits_val, targets_val
 
   def _run_minibatch_single_sample(self, feed_dict, ys, ys_argmax, extractions, targets, tags, n_imgs, save_logits):
-    ops = [ys_argmax, targets, tags, n_imgs, ys]
+    if targets is not None:
+        ops = [ys_argmax, targets, tags, n_imgs, ys]
+    else:
+        ops = [ys_argmax, tags, n_imgs, ys]
     ops += extractions
     results = self.session.run(ops, feed_dict)
-    ys_argmax_val, targets_val, tags, n, logits = results[:5]
-    extraction_vals = results[5:]
+    if targets is not None:
+        ys_argmax_val, targets_val, tags, n, logits = results[:5]
+        extraction_vals = results[5:]
+    else:
+        ys_argmax_val, tags, n, logits = results[:4]
+        targets_val = None
+        extraction_vals = results[4:]
+
     ys_argmax_val = numpy.expand_dims(ys_argmax_val, axis=3)
+
     return ys_argmax_val, logits, targets_val, tags, n, extraction_vals
 
   @staticmethod
