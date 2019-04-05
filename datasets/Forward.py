@@ -4,7 +4,6 @@ from Forwarding.OneshotForwarder import OneshotForwarder
 from Forwarding.TeacherAdaptingForwarder import TeacherAdaptingForwarder
 from Forwarding.TeacherContAdaptingForwarder import TeacherContAdaptingForwarder
 from Forwarding.UnsupervisedForwarder import UnsupervisedForwarder
-from Forwarding.CameraForwarder import CameraForwarder
 
 def forward(engine, network, data, dataset_name, save_results, save_logits):
   forwarder = ImageForwarder(engine)
@@ -14,8 +13,6 @@ def forward(engine, network, data, dataset_name, save_results, save_logits):
 def base_forward(engine, save_results, save_logits):
   if engine.dataset in ("davis"):
     forwarder = UnsupervisedForwarder(engine)
-  elif engine.dataset == "camera":
-    forwarder = CameraForwarder(engine)
   else:
     assert False, "unknown dataset for oneshot: " + engine.dataset
   forwarder.forward(None, None, save_results, save_logits)

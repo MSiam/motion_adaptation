@@ -169,7 +169,7 @@ class ImageForwarder(BasicForwarder):
           measures.append(measure)
     else:
         measures = []
-    return n, measures, ys_argmax_val, logits_val, targets_val
+    return n, measures, ys_argmax_val, logits_val, targets_val, feed_dict
 
   def _run_minibatch_single_sample(self, feed_dict, ys, ys_argmax, extractions, targets, tags, n_imgs, save_logits):
     if targets is not None:

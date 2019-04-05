@@ -1,10 +1,10 @@
 {
 #TODO: change this!
-"data_dir": "/home/menna/WORK/motion_adaptation/flownet2tf/teaching/",
+"davis_data_dir": "/home/menna/WORK/motion_adaptation/flownet2tf/teaching/",
 
 "model": "DAVIS16_2stream_unsupervised",
 "task": "baseline",
-"dataset": "camera",
+"dataset": "davis",
 "batch_size": 1,
 "batch_size_eval": 1,
 "log_verbosity": 5,
@@ -19,7 +19,7 @@
 "n_finetune_steps": 0,
 "learning_rates": "{1: 0.000003}",
 "save_oneshot": true,
-"save_logits": true,
+"save_logits": false,
 
 "augmentors_train": ["gamma", "flip"],
 "resize_mode_train": "",

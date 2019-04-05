@@ -9,11 +9,8 @@ FLAGS = None
 
 
 def save_imgs(img, flow, out_path, idx):
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-
-    cv2.imwrite(out_path + '%05d_img.png'%idx, img)
-    cv2.imwrite(out_path + '%05d_flo.png'%idx, flow)
+    cv2.imwrite(out_path + 'JPEGImages/sq1/%05d.png'%idx, img)
+    cv2.imwrite(out_path + 'OpticalFlow/sq1/%05d.png'%idx, flow)
 
 def main(args):
     # Create a new network
@@ -29,10 +26,27 @@ def main(args):
     net.prepare_test(checkpoint='./checkpoints/FlowNet2/flownet-2.ckpt-0',
                      inp_size=(1, flo_h, flo_w, 3))
 
+    out_path = args.out_path
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    if not os.path.exists(out_path + 'JPEGIamges/'):
+        os.mkdir(out_path + 'JPEGImages/')
+        os.mkdir(out_path + 'JPEGImages/sq1/')
+    if not os.path.exists(out_path + 'OpticalFlow/'):
+        os.mkdir(out_path + 'OpticalFlow/')
+        os.mkdir(out_path + 'OpticalFlow/sq1/')
+    if not os.path.exists(out_path + 'ImageSets/'):
+        os.mkdir(out_path + 'ImageSets/')
+        os.mkdir(out_path + 'ImageSets/480p')
+
+    if os.path.exists(out_path + 'ImageSets/480p/val.txt'):
+        f = open(out_path + 'ImageSets/480p/val.txt', 'w')
+    else:
+        f = open(out_path + 'ImageSets/480p/val.txt', 'a')
+
     while True:
         prev_frame = frame
         ret, frame = cap.read()
-
         if prev_frame is not None:
             prev_frame = cv2.resize(prev_frame, (flo_w, flo_h))
         frame = cv2.resize(frame, (flo_w, flo_h))
@@ -57,8 +71,11 @@ def main(args):
             cv2.imshow('Optical Flow ', flow_img)
 
             if saveFlag:
-                save_imgs(frame, flow_img, args.out_path, idx)
+                save_imgs(frame, flow_img, out_path, idx)
+                f.write('JPEGImages/sq1/%05d.png '%idx + 'Annotations/sq1/%05d.png\n'%idx)
                 idx += 1
+
+    f.close()
 
 if __name__ == '__main__':
      parser = argparse.ArgumentParser()
