@@ -116,5 +116,5 @@ for idx in range(len(file_names)):
     overlay = create_overlay(image[:,:,::-1], person_mask, [0, 1])
     cv2.imshow('Segment Human', overlay)
     cv2.waitKey(10)
-    skimage.io.imsave(IMAGE_DIR + '/Annotations/sq1/%05d.png'%counter, person_mask*255)
+    cv2.imwrite(IMAGE_DIR + '/Annotations/sq1/%05d.png'%counter, person_mask*255)
     counter += 1

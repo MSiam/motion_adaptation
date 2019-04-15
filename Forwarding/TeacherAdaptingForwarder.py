@@ -83,7 +83,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           print('Adapting on frame ', t, 'with loss = ', loss)
 
       print("Finished Adaptation")
-      cap = cv2.VideoCapture(1)
+      cap = cv2.VideoCapture(self.config.cam_idx)
       flo_w = 512; flo_h = 384
       segmentFlag = False
       data.camera = True

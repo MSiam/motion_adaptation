@@ -16,10 +16,11 @@ class Config(object):
     self.dtype = None
 
   #the full initialization can only be done after the log is initialized as we might need to write to the log
-  def initialize(self, vid):
+  def initialize(self, vid, cam_idx):
     if self._initialized:
       return
     self.vid= vid
+    self.cam_idx = cam_idx
     batch_size = self.int("batch_size")
     gpus = self.int_list("gpus")
     if batch_size % len(gpus) != 0:

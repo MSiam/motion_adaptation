@@ -15,7 +15,7 @@ def save_imgs(img, flow, out_path, idx):
 def main(args):
     # Create a new network
     net = FlowNet2(mode=Mode.TEST)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(args.cam_idx)
 
     frame = None
     flowFlag = False
@@ -84,5 +84,10 @@ if __name__ == '__main__':
         default='./teaching/',
         help='output path to save images used for teaching'
         )
-
+     parser.add_argument(
+         '--cam_idx',
+         default=0,
+         type=int,
+         help='number of camera used in Video Capture'
+         )
      main(parser.parse_args())

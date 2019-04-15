@@ -17,7 +17,7 @@ def init_log(config):
 
 
 def main(_):
-  assert len(sys.argv) == 3, "usage: main.py <config>"
+  assert len(sys.argv) == 4, "usage: main.py <config>"
   config_path = sys.argv[1]
   assert os.path.exists(config_path), config_path
   try:
@@ -26,7 +26,7 @@ def main(_):
     print "Malformed config file:", e
     return -1
   init_log(config)
-  config.initialize(int(sys.argv[2]))
+  config.initialize(int(sys.argv[2]), sys.argv[3])
   #dump the config into the log
   print >> log.v4, open(config_path).read()
   engine = Engine(config)
