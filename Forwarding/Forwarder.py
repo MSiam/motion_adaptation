@@ -122,7 +122,7 @@ class ImageForwarder(BasicForwarder):
     return measures
 
   def _process_forward_minibatch(self, data, network, save_logits, save_results, targets, ys,
-                                 start_frame_idx):
+                                 start_frame_idx, with_annotations=True):
     main_folder = "forwarded/" + self.model + "/" + data.subset + "/"
     tf.gfile.MakeDirs(main_folder)
 
@@ -140,10 +140,10 @@ class ImageForwarder(BasicForwarder):
       assert self.eval_chunk_size != -1
       feed_dict = data.feed_dict_for_video_frames(start_frame_idx=start_frame_idx,
                                                   end_frame_idx=start_frame_idx + self.eval_chunk_size,
-                                                  with_annotations=True)
+                                                  with_annotations=with_annotations)
       is_feed_dataset = True
     elif hasattr(data, "feed_dict_for_video_frame"):
-      feed_dict = data.feed_dict_for_video_frame(frame_idx=start_frame_idx, with_annotations=True)
+      feed_dict = data.feed_dict_for_video_frame(frame_idx=start_frame_idx, with_annotations=with_annotations)
       is_feed_dataset = True
     elif hasattr(data, "get_feed_dict"):
       feed_dict = data.get_feed_dict()

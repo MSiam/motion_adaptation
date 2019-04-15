@@ -97,6 +97,8 @@ class DavisOneshotDataset(OneshotImageDataset):
     self.flow_into_past = config.bool("flow_into_past", False)
     self.flow_into_future = config.bool("flow_into_future", False)
     self.twostream = config.bool("twostream", False)
+    self.camera = config.bool("camera", False)
+    self.current_frame = None
     super(DavisOneshotDataset, self).__init__(config, NUM_CLASSES, VOID_LABEL, subset, image_size=DAVIS_IMAGE_SIZE,
                                               use_old_label=use_old_label, flow_into_past=self.flow_into_past,
                                               flow_into_future=self.flow_into_future)
@@ -195,7 +197,13 @@ class DavisOneshotDataset(OneshotImageDataset):
     return DavisOneshotDataset._video_data
 
   def _get_video_data(self):
-    return self._videos[self._video_idx]
+    if self.camera:
+        img_shape = self.current_frame.shape
+        tensors = {"unnormalized_img": self.current_frame / 255.0, "tag": np.array("camera"),
+                   "label": np.zeros((img_shape[0], img_shape[1], 1), dtype=np.uint8)}
+        return tensors
+    else:
+        return self._videos[self._video_idx]
 
   def get_lucid_feed_dict(self):
     assert self.lucid_data_video is not None

@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 VOID_LABEL = 255
 import pickle
+from PIL import Image
 
 class TeacherAdaptingForwarder(OneshotForwarder):
   def __init__(self, engine):
@@ -29,7 +30,29 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     self.few_shot_samples = self.config.int("few_shot_samples", 1)
     self.dataset = self.config.unicode("davis_data_dir", "")
     self.adapt_flag = 1
-    self.rescale = self.config.float("davis_img_size_rescale")
+
+  def PIL2array(self, img):
+    return np.array(img.getdata(), np.uint8).reshape(img.size[1], img.size[0], 4)
+
+  def create_overlay(self, img, mask, colors):
+    im= Image.fromarray(np.uint8(img))
+    im= im.convert('RGBA')
+
+    mask_color= np.zeros((mask.shape[0], mask.shape[1],3))
+    mask_color[mask==colors[1],2]=255
+
+    overlay= Image.fromarray(np.uint8(mask_color))
+    overlay= overlay.convert('RGBA')
+
+    im= Image.blend(im, overlay, 0.7)
+    blended_arr= self.PIL2array(im)[:,:,:3]
+    img2= img.copy()
+    img2[mask!=colors[0],:]= blended_arr[mask!=colors[0],:]
+    return img2
+
+  def visualize(self, frame, ys_argmax_val):
+    overlay = self.create_overlay(frame, ys_argmax_val[0, :, :, 0], [0, 1])
+    return overlay
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -55,19 +78,38 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
           last_mask[mask==255] = 1
           last_mask[mask==128] = VOID_LABEL
-          new_shape = (int(self.rescale * last_mask.shape[1]), int(self.rescale * last_mask.shape[0]))
-          last_mask = cv2.resize(last_mask, new_shape, cv2.INTER_NEAREST)
           last_mask= np.expand_dims(last_mask, axis=2)
-          self._adapt(0, t, last_mask, get_posteriors)
-          print >> log.v5, "Motion Adapted frame", t, ":", measure
+          loss = self._adapt(0, t, last_mask, get_posteriors)
+          print('Adapting on frame ', t, 'with loss = ', loss)
 
       print("Finished Adaptation")
-      # Infer on Camera Live Feed Input
-#      while True:
-#
-#          # Compute IoU measures
-#          _, _, ys_argmax_val, posteriors_val, _ = self._process_forward_minibatch(
-#              data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
+      del self.train_data
+      cap = cv2.VideoCapture(1)
+      flo_w = 512; flo_h = 384
+      segmentFlag = False
+      while True:
+          # Capture Camera Live Feed Input
+          _, frame = cap.read()
+          frame = cv2.resize(frame, (flo_w, flo_h))
+
+          # Apply segmentation with the adapted network
+          if segmentFlag:
+              data.current_frame = frame
+              _, _, ys_argmax_val, posteriors_val, _, _ = self._process_forward_minibatch(
+                  data, network, False, False, targets, ys, start_frame_idx=0)
+              print('segmenting current frame')
+              overlay = self.visualize(frame, ys_argmax_val)
+
+              cv2.imshow('Live Feed', overlay)
+          else:
+              cv2.imshow('Live Feed', frame)
+
+          ch = cv2.waitKey(10)%256
+
+          if ch == ord('q'):
+              break
+          elif ch == ord('s'):
+              segmentFlag = not segmentFlag
 
 
   def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn):
@@ -87,5 +129,6 @@ class TeacherAdaptingForwarder(OneshotForwarder):
 
       loss, _, n_imgs = self.trainer.train_step(epoch=idx, feed_dict=feed_dict, loss_scale=loss_scale,
                                                 learning_rate=self.adaptation_learning_rate)
-      print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \
-               self.train_data.video_tag(video_idx), "loss:", loss
+      #print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \
+      #         self.train_data.video_tag(video_idx), "loss:", loss
+    return loss
