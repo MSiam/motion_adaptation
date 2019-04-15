@@ -10,7 +10,7 @@ from datasets.DAVIS.DAVIS import NUM_CLASSES, VOID_LABEL, DAVIS_DEFAULT_PATH, DA
 from datasets.FeedDataset import OneshotImageDataset
 from datasets.Util.Util import unique_list, load_flow_from_flo
 from datasets.Util.Reader import create_tensor_dict
-
+import numpy as np
 
 def _load_flow(flow_dir, img_fn, future, flow_as_angle):
   if future:
@@ -97,7 +97,7 @@ class DavisOneshotDataset(OneshotImageDataset):
     self.flow_into_past = config.bool("flow_into_past", False)
     self.flow_into_future = config.bool("flow_into_future", False)
     self.twostream = config.bool("twostream", False)
-    self.camera = config.bool("camera", False)
+    self.camera = False
     self.current_frame = None
     super(DavisOneshotDataset, self).__init__(config, NUM_CLASSES, VOID_LABEL, subset, image_size=DAVIS_IMAGE_SIZE,
                                               use_old_label=use_old_label, flow_into_past=self.flow_into_past,
@@ -199,9 +199,9 @@ class DavisOneshotDataset(OneshotImageDataset):
   def _get_video_data(self):
     if self.camera:
         img_shape = self.current_frame.shape
-        tensors = {"unnormalized_img": self.current_frame / 255.0, "tag": np.array("camera"),
+        tensors = {"unnormalized_img": self.current_frame / 255.0, "tag": np.array("///camera.jpg"),
                    "label": np.zeros((img_shape[0], img_shape[1], 1), dtype=np.uint8)}
-        return tensors
+        return [tensors]
     else:
         return self._videos[self._video_idx]
 

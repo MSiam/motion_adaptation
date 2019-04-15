@@ -83,10 +83,11 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           print('Adapting on frame ', t, 'with loss = ', loss)
 
       print("Finished Adaptation")
-      del self.train_data
       cap = cv2.VideoCapture(1)
       flo_w = 512; flo_h = 384
       segmentFlag = False
+      data.camera = True
+#      for t in range(self.few_shot_samples, data.num_examples_per_epoch()):
       while True:
           # Capture Camera Live Feed Input
           _, frame = cap.read()
@@ -94,18 +95,17 @@ class TeacherAdaptingForwarder(OneshotForwarder):
 
           # Apply segmentation with the adapted network
           if segmentFlag:
-              data.current_frame = frame
+              data.current_frame = frame[:, :, ::-1]
               _, _, ys_argmax_val, posteriors_val, _, _ = self._process_forward_minibatch(
                   data, network, False, False, targets, ys, start_frame_idx=0)
               print('segmenting current frame')
-              overlay = self.visualize(frame, ys_argmax_val)
 
+              overlay = self.visualize(frame, ys_argmax_val)
               cv2.imshow('Live Feed', overlay)
           else:
               cv2.imshow('Live Feed', frame)
 
           ch = cv2.waitKey(10)%256
-
           if ch == ord('q'):
               break
           elif ch == ord('s'):
@@ -126,7 +126,6 @@ class TeacherAdaptingForwarder(OneshotForwarder):
       feed_dict[self.train_data.get_label_placeholder()] = adaptation_target
       loss_scale = self.adaptation_loss_scale
       adaption_frame_idx = frame_idx
-
       loss, _, n_imgs = self.trainer.train_step(epoch=idx, feed_dict=feed_dict, loss_scale=loss_scale,
                                                 learning_rate=self.adaptation_learning_rate)
       #print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \

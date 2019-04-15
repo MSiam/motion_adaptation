@@ -202,6 +202,10 @@ class SegmentationSoftmax(Layer):
         void_label_mask = tf.equal(targets, void_label)
         no_void_label_mask = tf.logical_not(void_label_mask)
         targets = tf.where(void_label_mask, tf.zeros_like(targets), targets)
+#        indices=tf.squeeze(tf.where(tf.not_equal(targets,void_label)),1)
+#        targets=tf.cast(tf.gather(targets,indices),tf.int32)
+#        y_pred=tf.gather(y_pred,indices)
+#        pred=tf.gather(pred,indices)
       else:
         no_void_label_mask = None
 
