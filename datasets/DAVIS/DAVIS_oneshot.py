@@ -97,7 +97,6 @@ class DavisOneshotDataset(OneshotImageDataset):
     self.flow_into_past = config.bool("flow_into_past", False)
     self.flow_into_future = config.bool("flow_into_future", False)
     self.twostream = config.bool("twostream", False)
-
     super(DavisOneshotDataset, self).__init__(config, NUM_CLASSES, VOID_LABEL, subset, image_size=DAVIS_IMAGE_SIZE,
                                               use_old_label=use_old_label, flow_into_past=self.flow_into_past,
                                               flow_into_future=self.flow_into_future)

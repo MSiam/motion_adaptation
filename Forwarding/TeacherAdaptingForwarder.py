@@ -29,6 +29,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     self.few_shot_samples = self.config.int("few_shot_samples", 1)
     self.dataset = self.config.unicode("davis_data_dir", "")
     self.adapt_flag = 1
+    self.rescale = self.config.float("davis_img_size_rescale")
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -39,130 +40,52 @@ class TeacherAdaptingForwarder(OneshotForwarder):
       ys = self._adjust_results_to_targets(ys, targets)
       data = self.val_data
 
-      # Process minibatch forward for first frame
-      n, measures, ys_argmax_val, logits_val, targets_val = self._process_forward_minibatch(
-        data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=0)
-      last_mask = targets_val[0]
+      # Probability Map Function
+      def get_posteriors():
+          n_, _, _, logits_val_, _ = self._process_forward_minibatch(
+            data, network, save_logits=False, save_results=False, targets=targets, ys=ys, start_frame_idx=t)
+          assert n_ == 1
+          return logits_val_[0]
 
-      assert n == 1
-      n_frames = data.num_examples_per_epoch()
-
-      measures_video = []
-      measures_video.append(measures[0])
-      dirs= sorted(os.listdir(self.mot_dir))
-      files_annotations = sorted(os.listdir(self.mot_dir+data.video_tag(video_idx)))
-
-      for t in xrange(0, n_frames):
-
-          # Probability Map Function
-          def get_posteriors():
-              n_, _, _, logits_val_, _ = self._process_forward_minibatch(
-                data, network, save_logits=False, save_results=False, targets=targets, ys=ys, start_frame_idx=t)
-              assert n_ == 1
-              return logits_val_[0]
-
-          # Start Network Adaptation Only on first frame
-          if t < self.few_shot_samples:
-              # Read adaptation target and postprocess it
-              # For DAVIS starts at 0, FORDS starts at 1 for frame numbers, FBMS use annotation files
-              if "FBMS" in self.mot_dir:
-                  mask = cv2.imread(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 0)
-              else:
-                  if "IVOS" in self.dataset:
-                      f= open(self.mot_dir+data.video_tag(video_idx)+'/'+files_annotations[t], 'rb')
-                  elif "DAVIS" in self.dataset:
-                     f= open(self.mot_dir+dirs[video_idx]+'/%05d.pickle'%(t), 'rb')
-                  mask = pickle.load(f)[:,:,1]
-              mask= (mask- mask.min())*1.0/ (mask.max()-mask.min())
-              last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
-              last_mask[mask>self.neg_th]=1
-              last_mask= np.expand_dims(last_mask, axis=2)
-
-              negatives = self._adapt(video_idx, t, last_mask, get_posteriors,
-                                      adapt_flag=self.adapt_flag)
-
-          # Compute IoU measures
-          n, measures, ys_argmax_val, posteriors_val, targets_val = self._process_forward_minibatch(
-              data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
-          assert n == 1
-          assert len(measures) == 1
-          measure = measures[0]
+      # Adapt the network based on number of few_shot_samples
+      files_annotations = sorted(os.listdir(self.mot_dir + 'sq1/'))
+      for t in range(self.few_shot_samples):
+          f= self.mot_dir + 'sq1/' + files_annotations[t]
+          mask = cv2.imread(f, 0)
+          last_mask= np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
+          last_mask[mask==255] = 1
+          last_mask[mask==128] = VOID_LABEL
+          new_shape = (int(self.rescale * last_mask.shape[1]), int(self.rescale * last_mask.shape[0]))
+          last_mask = cv2.resize(last_mask, new_shape, cv2.INTER_NEAREST)
+          last_mask= np.expand_dims(last_mask, axis=2)
+          self._adapt(0, t, last_mask, get_posteriors)
           print >> log.v5, "Motion Adapted frame", t, ":", measure
-          measures_video.append(measure)
 
-      measures_video = average_measures(measures_video)
-      print >> log.v1, "sequence", video_idx + 1, data.video_tag(video_idx), measures_video
+      print("Finished Adaptation")
+      # Infer on Camera Live Feed Input
+#      while True:
+#
+#          # Compute IoU measures
+#          _, _, ys_argmax_val, posteriors_val, _ = self._process_forward_minibatch(
+#              data, network, save_logits, self.save_oneshot, targets, ys, start_frame_idx=t)
 
-  def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn, adapt_flag=0):
+
+  def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn):
     """
     adapt_flag (int): 0:do not adapt, 1:adapt with hard labels based on teacher,
                       2:adapt on hard labels from last mask, 3:use continuous labels
     """
-    if adapt_flag < 3:
-        # Perform Mask erosion to reduce effect of false positive
-        eroded_mask = grey_erosion(last_mask, size=(self.erosion_size, self.erosion_size, 1))
-
-        # Compute distance transform
-        dt = distance_transform_edt(numpy.logical_not(eroded_mask))
-
-        # Adaptation target initialize
-        adaptation_target = numpy.zeros_like(last_mask)
-        adaptation_target[:] = VOID_LABEL
-
-        # Retrieve current probability map to adapt with
-        current_posteriors = get_posteriors_fn()
-        if adapt_flag == 2: # adapt with current prob map
-            positives = current_posteriors[:, :, 1] > self.posterior_positive_threshold
-        elif adapt_flag == 1: # adapt with provided adaptation target form teacher
-            positives = last_mask==1
-
-        if self.use_positives:
-          adaptation_target[positives] = 1
-
-        # Threshold based on distance transform
-        threshold = self.distance_negative_threshold
-        negatives = dt > threshold
-        if self.use_negatives:
-          adaptation_target[negatives] = 0
-    else:
-        # adapt with the provided continuous adaptation target
-        adaptation_target = last_mask
-
-
-    do_adaptation = eroded_mask.sum() > 0
-
-    # Save adaptation targets for debugging
-    if self.debug:
-      adaptation_target_visualization = adaptation_target.copy()
-      adaptation_target_visualization[adaptation_target == 1] = 128
-      if not do_adaptation:
-        adaptation_target_visualization[:] = VOID_LABEL
-      from scipy.misc import imsave
-      folder = self.val_data.video_tag().replace("__", "/")
-      imsave("forwarded/" + self.model + "/valid/" + folder + "/adaptation_%05d.png" % frame_idx,
-             numpy.squeeze(adaptation_target_visualization))
-
+    adaptation_target = last_mask
     self.train_data.set_video_idx(video_idx)
 
     # Start Adapting based on number of adaptation_steps
     for idx in xrange(self.n_adaptation_steps):
-      do_step = True
-      #if idx % self.adaptation_interval == 0:
-      if do_adaptation:
-        feed_dict = self.train_data.feed_dict_for_video_frame(frame_idx, with_annotations=True)
-        feed_dict[self.train_data.get_label_placeholder()] = adaptation_target
-        loss_scale = self.adaptation_loss_scale
-        adaption_frame_idx = frame_idx
-      else:
-        do_step = False
+      feed_dict = self.train_data.feed_dict_for_video_frame(frame_idx, with_annotations=True)
+      feed_dict[self.train_data.get_label_placeholder()] = adaptation_target
+      loss_scale = self.adaptation_loss_scale
+      adaption_frame_idx = frame_idx
 
-      if do_step:
-        loss, _, n_imgs = self.trainer.train_step(epoch=idx, feed_dict=feed_dict, loss_scale=loss_scale,
-                                                  learning_rate=self.adaptation_learning_rate)
-        assert n_imgs == 1
-        print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \
-            self.train_data.video_tag(video_idx), "loss:", loss
-    if do_adaptation:
-      return negatives
-    else:
-      return None
+      loss, _, n_imgs = self.trainer.train_step(epoch=idx, feed_dict=feed_dict, loss_scale=loss_scale,
+                                                learning_rate=self.adaptation_learning_rate)
+      print >> log.v4, "adapting on frame", adaption_frame_idx, "of sequence", video_idx + 1, \
+               self.train_data.video_tag(video_idx), "loss:", loss

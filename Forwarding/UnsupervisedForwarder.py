@@ -95,7 +95,7 @@ class UnsupervisedForwarder(OneshotForwarder):
           overlay = self.create_overlay(fd[fd.keys()[0]][:,:,::-1],
                                         adap_target, [0, VOID_LABEL, 255])
           cv2.imwrite(self.data_dir+"/Targets/sq1/%05d.png"%t,
-                      ys_argmax_val)
+                      adap_target)
           cv2.imshow('Adaptation Targets', overlay)
           cv2.waitKey(10)
 
