@@ -16,7 +16,7 @@
 "targets_path": "/home/menna/WORK/motion_adaptation/flownet2tf/teaching/Targets/",
 "trainsplit": 0,
 "adapt_th": 0.8,
-"few_shot_samples": 10,
+"few_shot_samples": 1,
 
 "load": "models/DAVIS_reduced/DAVIS_dr2-00000001",
 "n_finetune_steps": 0,
