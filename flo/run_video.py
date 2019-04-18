@@ -100,14 +100,17 @@ class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
                'teddy bear', 'hair drier', 'toothbrush']
 
 # Load a random image from the images folder
-file_names = sorted(os.listdir(IMAGE_DIR + 'JPEGImages/sq1/'))
+#for d in sorted(os.listdir(IMAGE_DIR + 'JPEGImages/')):
+dirs = sorted(os.listdir(IMAGE_DIR + 'JPEGImages/'))
+d = dirs[int(sys.argv[2])]
+file_names = sorted(os.listdir(IMAGE_DIR + 'JPEGImages/'+d+'/'))
 if not os.path.exists(IMAGE_DIR + 'Annotations'):
     os.mkdir(IMAGE_DIR + 'Annotations')
-    os.mkdir(IMAGE_DIR + 'Annotations/sq1')
+    os.mkdir(IMAGE_DIR + 'Annotations/'+d+'/')
 
 counter = 0
 for idx in range(len(file_names)):
-    image = skimage.io.imread(os.path.join(IMAGE_DIR + 'JPEGImages/sq1/', file_names[idx]))
+    image = skimage.io.imread(os.path.join(IMAGE_DIR + 'JPEGImages/'+d+'/', file_names[idx]))
     results = model.detect([image], verbose=1)
 
     masks = results[0]['masks']
@@ -116,5 +119,5 @@ for idx in range(len(file_names)):
     overlay = create_overlay(image[:,:,::-1], person_mask, [0, 1])
     cv2.imshow('Segment Human', overlay)
     cv2.waitKey(10)
-    cv2.imwrite(IMAGE_DIR + '/Annotations/sq1/%05d.png'%counter, person_mask*255)
+    cv2.imwrite(IMAGE_DIR + '/Annotations/'+d+'/%05d.png'%counter, person_mask*255)
     counter += 1

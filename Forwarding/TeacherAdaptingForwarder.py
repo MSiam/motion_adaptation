@@ -55,15 +55,15 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     self.adaptFirst = False
 
   def onClick(self, idx):
-    self.current_sq = idx
+    self.current_sq = idx - 1
     self.adaptFirst = True
 
   def create_buttons(self):
     labelfont = ('times', 15, 'bold')
-    idx = 0
+    idx = 1
     btns = []
     for sq in sorted(os.listdir(self.mot_dir)):
-        btns.append(Button(self.root, text=sq,
+        btns.append(Button(self.root, text=sq.split('sq_')[1],
                            command=lambda inst = self, idx = idx: inst.onClick(idx),
                            width=20))
 
@@ -169,13 +169,11 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           print("Finished Adaptation")
       else:
           self.data.camera = True
-          while True:
-              self.data.current_frame = self.frame[:, :, ::-1]
-              _, _, ys_argmax_val, posteriors_val, _, _ = self._process_forward_minibatch(
-                  self.data, self.network, False, False, self.targets, self.ys, start_frame_idx=0)
+          self.data.current_frame = self.frame[:, :, ::-1]
+          _, _, ys_argmax_val, posteriors_val, _, _ = self._process_forward_minibatch(
+              self.data, self.network, False, False, self.targets, self.ys, start_frame_idx=0)
 
-              self.overlay = self.visualize(self.frame, ys_argmax_val)
-              print('segmenting current frame')
+          self.overlay = self.visualize(self.frame, ys_argmax_val)
 
   def _adapt(self, video_idx, frame_idx, last_mask, get_posteriors_fn):
     """

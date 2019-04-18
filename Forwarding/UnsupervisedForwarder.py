@@ -16,9 +16,10 @@ class UnsupervisedForwarder(OneshotForwarder):
   def __init__(self, engine):
     super(UnsupervisedForwarder, self).__init__(engine)
     self.data_dir = engine.config.unicode("davis_data_dir", "")
+    self.seqs = sorted(os.listdir(self.data_dir+'JPEGImages/'))
     if not os.path.exists(self.data_dir + 'Targets'):
         os.mkdir(self.data_dir + 'Targets')
-        os.mkdir(self.data_dir + 'Targets/sq1')
+        os.mkdir(self.data_dir + 'Targets/'+self.seqs[self.config.vid])
 
   def PIL2array(self, img):
     return np.array(img.getdata(), np.uint8).reshape(img.size[1], img.size[0], 4)
@@ -94,7 +95,7 @@ class UnsupervisedForwarder(OneshotForwarder):
                                                          ys_argmax_val[0, :, :, 0])
           overlay = self.create_overlay(fd[fd.keys()[0]][:,:,::-1],
                                         adap_target, [0, VOID_LABEL, 255])
-          cv2.imwrite(self.data_dir+"/Targets/sq1/%05d.png"%t,
+          cv2.imwrite(self.data_dir+"/Targets/"+self.seqs[self.config.vid]+"/%05d.png"%t,
                       adap_target)
           cv2.imshow('Adaptation Targets', overlay)
           cv2.waitKey(10)

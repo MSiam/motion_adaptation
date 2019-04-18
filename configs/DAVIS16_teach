@@ -16,7 +16,7 @@
 "targets_path": "/home/menna/WORK/motion_adaptation/flownet2tf/teaching/Targets/",
 "trainsplit": 0,
 "adapt_th": 0.8,
-"few_shot_samples": 1,
+"few_shot_samples": 5,
 
 "load": "models/DAVIS_reduced/DAVIS_dr2-00000001",
 "n_finetune_steps": 0,
@@ -31,7 +31,7 @@
 "augmentors_val": [],
 "n_test_samples": 1,
 
-"n_adaptation_steps": 15,
+"n_adaptation_steps": 20,
 "adaptation_interval": 5,
 "adaptation_learning_rate": 0.0001,
 "posterior_positive_threshold": 0.8,
