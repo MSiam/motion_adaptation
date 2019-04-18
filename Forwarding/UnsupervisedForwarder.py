@@ -20,6 +20,10 @@ class UnsupervisedForwarder(OneshotForwarder):
     if not os.path.exists(self.data_dir + 'Targets'):
         os.mkdir(self.data_dir + 'Targets')
         os.mkdir(self.data_dir + 'Targets/'+self.seqs[self.config.vid])
+    if not os.path.exists(self.data_dir + 'Crops'):
+        os.mkdir(self.data_dir + 'Crops')
+        os.mkdir(self.data_dir + 'Crops/'+self.seqs[self.config.vid])
+
 
   def PIL2array(self, img):
     return np.array(img.getdata(), np.uint8).reshape(img.size[1], img.size[0], 4)
@@ -45,8 +49,29 @@ class UnsupervisedForwarder(OneshotForwarder):
     img2[mask!=colors[0],:]= blended_arr[mask!=colors[0],:]
     return img2
 
+  def detect_largest_blob(self, targets):
+    targets_ = np.asarray(targets, dtype=np.uint8)
+    contours, hierarchy = cv2.findContours(targets_, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    max_area = -1
+    max_rect = None
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area > max_area:
+            max_area = area
+            max_rect = cv2.boundingRect(c)
+
+    mask = np.zeros_like(targets)
+    mask[max_rect[1]:max_rect[1]+max_rect[3],
+         max_rect[0]:max_rect[0]+max_rect[2]] = 1
+
+    targets_filtered = mask * targets
+    return targets_filtered, max_rect
+
   def post_process(self, targets_val, probs_val):
+
     probs_val[targets_val == 1] = 0
+    probs_val, rect = self.detect_largest_blob(probs_val)
     # Perform Mask erosion to reduce effect of false positive
     eroded_mask = grey_erosion(probs_val, size=(15, 15))
     # Compute distance transform
@@ -54,12 +79,13 @@ class UnsupervisedForwarder(OneshotForwarder):
     # Adaptation target initialize
     adaptation_target = numpy.zeros(probs_val.shape, dtype=np.uint8)
     adaptation_target[:] = VOID_LABEL
+
     # Retrieve current probability map to adapt with
     adaptation_target[probs_val == 1] = 255
     # Threshold based on distance transform
     threshold = 60
     adaptation_target[dt > threshold] = 0
-    return probs_val, adaptation_target
+    return probs_val, adaptation_target, rect
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -91,12 +117,17 @@ class UnsupervisedForwarder(OneshotForwarder):
 
           measures_video.append(measure)
 
-          ys_argmax_val, adap_target = self.post_process(targets_val[0, :, :, 0],
-                                                         ys_argmax_val[0, :, :, 0])
+          ys_argmax_val, adap_target, rect = self.post_process(targets_val[0, :, :, 0],
+                                                               ys_argmax_val[0, :, :, 0])
           overlay = self.create_overlay(fd[fd.keys()[0]][:,:,::-1],
                                         adap_target, [0, VOID_LABEL, 255])
+          img = cv2.imread(self.data_dir+'/JPEGImages/'+self.seqs[self.config.vid]+'/%05d.png'%t)
+          indent = 10
+          crop = img[rect[1]-indent:rect[1]+rect[3]+indent, rect[0]-indent:rect[0]+rect[2]+indent, :]
           cv2.imwrite(self.data_dir+"/Targets/"+self.seqs[self.config.vid]+"/%05d.png"%t,
                       adap_target)
+          cv2.imwrite(self.data_dir+"/Crops/"+self.seqs[self.config.vid]+"/%05d.png"%t,
+                      crop)
           cv2.imshow('Adaptation Targets', overlay)
           cv2.waitKey(10)
 
