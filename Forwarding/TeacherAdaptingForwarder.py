@@ -127,8 +127,28 @@ class TeacherAdaptingForwarder(OneshotForwarder):
     return img2
 
   def visualize(self, frame, ys_argmax_val):
-    overlay = self.create_overlay(frame, ys_argmax_val[0, :, :, 0], [0, 1])
+    overlay = self.create_overlay(frame, ys_argmax_val, [0, 1])
     return overlay
+
+  def detect_largest_blob(self, targets):
+    targets_ = np.asarray(targets, dtype=np.uint8)
+    contours, hierarchy = cv2.findContours(targets_, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    max_area = -1
+    max_rect = None
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area > max_area:
+            max_area = area
+            max_rect = cv2.boundingRect(c)
+
+    mask = np.zeros_like(targets)
+    mask[max_rect[1]:max_rect[1]+max_rect[3],
+         max_rect[0]:max_rect[0]+max_rect[2]] = 1
+
+    targets_filtered = mask * targets
+    return targets_filtered, max_rect
+
 
   def _oneshot_forward_video(self, video_idx, save_logits):
     with Timer():
@@ -172,6 +192,7 @@ class TeacherAdaptingForwarder(OneshotForwarder):
           self.data.current_frame = self.frame[:, :, ::-1]
           _, _, ys_argmax_val, posteriors_val, _, _ = self._process_forward_minibatch(
               self.data, self.network, False, False, self.targets, self.ys, start_frame_idx=0)
+          ys_argmax_val, _ = self.detect_largest_blob(ys_argmax_val[0, :, :, 0])
 
           self.overlay = self.visualize(self.frame, ys_argmax_val)
 

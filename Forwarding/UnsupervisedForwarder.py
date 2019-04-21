@@ -20,9 +20,10 @@ class UnsupervisedForwarder(OneshotForwarder):
     if not os.path.exists(self.data_dir + 'Targets'):
         os.mkdir(self.data_dir + 'Targets')
         os.mkdir(self.data_dir + 'Targets/'+self.seqs[self.config.vid])
-    if not os.path.exists(self.data_dir + 'Crops'):
-        os.mkdir(self.data_dir + 'Crops')
-        os.mkdir(self.data_dir + 'Crops/'+self.seqs[self.config.vid])
+    if not os.path.exists(self.data_dir[:-1]+'_det/' + 'Crops'):
+        os.mkdir(self.data_dir[:-1]+'_det/' + 'Crops')
+    if not os.path.exists(self.data_dir[:-1]+'_det/' + 'Crops/'+self.seqs[self.config.vid]):
+        os.mkdir(self.data_dir[:-1]+'_det/' + 'Crops/'+self.seqs[self.config.vid])
 
 
   def PIL2array(self, img):
@@ -126,7 +127,7 @@ class UnsupervisedForwarder(OneshotForwarder):
           crop = img[rect[1]-indent:rect[1]+rect[3]+indent, rect[0]-indent:rect[0]+rect[2]+indent, :]
           cv2.imwrite(self.data_dir+"/Targets/"+self.seqs[self.config.vid]+"/%05d.png"%t,
                       adap_target)
-          cv2.imwrite(self.data_dir+"/Crops/"+self.seqs[self.config.vid]+"/%05d.png"%t,
+          cv2.imwrite(self.data_dir[:-1]+'_det/'+"/Crops/"+self.seqs[self.config.vid]+"/%05d.png"%t,
                       crop)
           cv2.imshow('Adaptation Targets', overlay)
           cv2.waitKey(10)
