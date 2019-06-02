@@ -55,6 +55,7 @@ Explanation of the most important config parameters:
 
 
 [Download Data Formatted for MotAdapt](https://drive.google.com/open?id=1lq2q-ivxppfbefj9pryVDK3NEvbjTnn1)
+
 [Trained Weights for Teacher model (2-stream WRN) trained on DAVIS16](https://drive.google.com/file/d/0B75x4CuVd10pNG5sX0d5QWhiY00/view?usp=sharing)
 
 This work is a continuation on Team Alberta KUKA Innovation Award submission.
